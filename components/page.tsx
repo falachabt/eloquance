@@ -10,6 +10,9 @@ import { OldSessions  } from "./OldSections"
 import { Footer } from "./Footer"
 import Header from './Header';
 import Cta from './Cta';
+import { EligibilitySection } from "./WhoCanParticipate"
+import { WhyParticipate } from "./WhyParticipate"
+import { ReservationSection } from "./Reservation"
 
 const {  Content } = Layout;
 const { Title, Paragraph } = Typography;
@@ -70,6 +73,10 @@ const Page = () => (
       <HeroSection />
        <FeaturesSection /> 
         <Cta /> 
+
+           <EligibilitySection/> 
+
+ <WhyParticipate/> 
 
          <OldSessions /> 
 
