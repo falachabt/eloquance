@@ -13,73 +13,63 @@ import {
 } from "@ant-design/icons";
 import { notchpay } from "@/lib/notchpay";
 
-const fetchSteps =  async  () => {
-    const { data , error} = await supabase.from("etapes_concours").select("*");
-    if(error) throw error;
-
-
-    return data;
-} 
+const fetchSteps = async () => {
+  const { data, error } = await supabase.from("etapes_concours").select("*");
+  if (error) throw error;
+  return data;
+};
 
 const fetchCandidateData = async () => {
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser();
-    if (error || !user) {
-      throw new Error("Utilisateur non connecté");
-    }
-  
-    const { data: candidate, error: candidateError } = await supabase
-      .from("candidats")
-      .select("*,  candidats_etapes(*)")
-      .eq("email", user.email)
-      .single();
-  
-    if (candidateError) {
-      throw new Error("Impossible de charger les données du candidat.");
-    }
-  
-    const paymentDetails = await notchpay.payments.verifyAndFetchPayment(
-      candidate?.trx_id
-    );
-  
-    // Si le paiement est complet, insérer l'étape d'inscription dans la table candidats_etapes
-    if (paymentDetails?.transaction?.status === "complete") {
-        const stps = await fetchSteps();
+  const { data: { user }, error } = await supabase.auth.getUser();
+  if (error || !user) {
+    throw new Error("Utilisateur non connecté");
+  }
 
-        const stp_id = stps?.find(step => step.ordre === 1)?.id
-      const { error: insertError } = await supabase
-        .from("candidats_etapes")
-        .insert([
-          { candidat_id: candidate.id, etape_id: stp_id, statut: "validée" }, // 1 correspond à l'ID de l'étape d'inscription
-        ]);
-  
-      if (insertError) {
-        console.error("Erreur lors de l'insertion de l'étape d'inscription :", insertError);
-      }
-    }
-  
-    // Récupérer les étapes associées au candidat
-    const { data: steps, error: stepsError } = await supabase
+  const { data: candidate, error: candidateError } = await supabase
+    .from("candidats")
+    .select("*, candidats_etapes(*)")
+    .eq("email", user.email)
+    .single();
+
+  if (candidateError) {
+    throw new Error("Impossible de charger les données du candidat.");
+  }
+
+  const paymentDetails = await notchpay.payments.verifyAndFetchPayment(candidate?.trx_id);
+
+  // Insérer l'étape d'inscription si le paiement est complet
+  if (paymentDetails?.transaction?.status === "complete") {
+    const stps = await fetchSteps();
+    const stp_id = stps?.find(step => step.ordre === 1)?.id;
+    const { error: insertError } = await supabase
       .from("candidats_etapes")
-      .select("etape_id, statut")
-      .eq("candidat_id", candidate.id);
-  
-    if (stepsError) {
-      throw new Error("Impossible de charger les étapes du candidat.");
+      .insert([{ candidat_id: candidate.id, etape_id: stp_id, statut: "validée" }]);
+
+    if (insertError) {
+      console.error("Erreur lors de l'insertion de l'étape d'inscription :", insertError);
     }
-  
-    return {
-      user,
-      candidate: {
-        ...candidate,
-        payment_status: paymentDetails?.transaction?.status,
-        steps,
-      },
-    };
+  }
+
+  // Récupérer les étapes associées au candidat
+  const { data: steps, error: stepsError } = await supabase
+    .from("candidats_etapes")
+    .select("etape_id, statut")
+    .eq("candidat_id", candidate.id);
+
+  if (stepsError) {
+    throw new Error("Impossible de charger les étapes du candidat.");
+  }
+
+  return {
+    user,
+    candidate: {
+      ...candidate,
+      payment_status: paymentDetails?.transaction?.status,
+      steps,
+    },
   };
-  
+};
+
 const CandidateDashboard = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const router = useRouter();
@@ -89,8 +79,7 @@ const CandidateDashboard = () => {
     revalidateOnFocus: false,
     shouldRetryOnError: false,
   });
-  // Use SWR for data fetching
-  const { data : consours_steps, error : steps_error, mutate :  steps_mutate } = useSWR("steps", fetchSteps, {
+  const { data: consours_steps, error: steps_error } = useSWR("steps", fetchSteps, {
     revalidateOnFocus: false,
     shouldRetryOnError: false,
   });
@@ -116,66 +105,33 @@ const CandidateDashboard = () => {
   }
 
   const { user, candidate } = data;
-  const { name, email, age, school, city, motivation, payment_status, votes, steps } =
-    candidate;
+  const { name, email, age, school, city, motivation, payment_status, steps } = candidate;
 
   const updateProfilePicture = async (event) => {
     const file = event.target.files[0];
     setIsUpdating(true);
     await new Promise((resolve) => setTimeout(resolve, 2000));
     setIsUpdating(false);
-    // Update profile picture logic with Supabase
-  };
-
-  const updateDescription = async (event) => {
-    const description = event.target.value;
-    setIsUpdating(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    mutate({ ...candidate, motivation: description }, false);
-    setIsUpdating(false);
-    // Update description logic with Supabase
+    // Logique de mise à jour de l'image de profil avec Supabase
   };
 
   const handlePayRetry = async () => {
     try {
       await pay_inscription(user.email);
-      mutate(); // Refresh data after payment
+      mutate(); // Rafraîchir les données après le paiement
     } catch (err) {
       console.error("Erreur lors du paiement :", err);
     }
   };
 
-  const applicationSteps = [
-    "Inscription",
-    "Paiement",
-    "Validation",
-    "Campagne",
-  ];
-  const currentStep = payment_status ? 3 : 1;
-
   const renderPaymentStatusIcon = () => {
     switch (payment_status) {
       case "pending":
-        return (
-          <HourglassOutlined
-            className="text-orange-500"
-            style={{ fontSize: "24px" }}
-          />
-        );
+        return <HourglassOutlined className="text-orange-500" style={{ fontSize: "24px" }} />;
       case "complete":
-        return (
-          <CheckCircleOutlined
-            className="text-green-500"
-            style={{ fontSize: "24px" }}
-          />
-        );
+        return <CheckCircleOutlined className="text-green-500" style={{ fontSize: "24px" }} />;
       default:
-        return (
-          <CloseCircleOutlined
-            className="text-red-500"
-            style={{ fontSize: "24px" }}
-          />
-        );
+        return <CloseCircleOutlined className="text-red-500" style={{ fontSize: "24px" }} />;
     }
   };
 
@@ -226,10 +182,12 @@ const CandidateDashboard = () => {
             <div className="p-6">
               <div className="flex flex-col items-center">
                 <div className="relative group">
-                  <img
+                  <Image
                     src={`https://api.dicebear.com/6.x/initials/svg?seed=${name}`}
                     alt="Profile"
                     className="w-32 h-32 rounded-full object-cover border-4 border-blue-500 group-hover:opacity-75 transition-opacity duration-300"
+                    width={128}
+                    height={128}
                   />
                   <label
                     htmlFor="avatar-upload"
@@ -246,89 +204,43 @@ const CandidateDashboard = () => {
                         strokeLinecap="round"
                         strokeLinejoin="round"
                         strokeWidth={2}
-                        d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                        d="M16 16v-1a4 4 0 00-8 0v1M12 12v6m0 0l-3-3m3 3l3-3"
                       />
                     </svg>
                   </label>
                   <input
                     id="avatar-upload"
                     type="file"
-                    className="hidden"
-                    accept="image/*"
                     onChange={updateProfilePicture}
-                    disabled={isUpdating}
+                    className="hidden"
                   />
                 </div>
-                <h2 className="mt-4 text-xl text-center font-bold text-gray-800">
-                  {name}
-                </h2>
+                <h2 className="text-2xl font-bold mt-4">{name}</h2>
                 <p className="text-gray-600">{email}</p>
+                <p className="text-gray-600">Age: {age}</p>
+                <p className="text-gray-600">École: {school}</p>
+                <p className="text-gray-600">Ville: {city}</p>
               </div>
-              <div className="mt-6 space-y-4">
-                <InfoItem label="Âge" value={age} />
-                <InfoItem label="École" value={school} />
-                <InfoItem label="Ville" value={city} />
-              </div>
-              
             </div>
           </div>
-          <div className="w-full lg3 bg-white shadow-xl rounded-lg overflow-hidden">
-            {" "}
+          <div className="w-full lg:w-3/5 bg-white shadow-xl rounded-lg overflow-hidden">
             <div className="p-6">
-              {" "}
-              <h3 className="text-2xl font-bold mb-4 text-gray-800">
-                {" "}
-                Progression{" "}
-              </h3>{" "}
-              <ul className="space-y-4">
-                {" "}
-                {consours_steps?.map((step, index) => {
-  // Check if the step is validated
-  const isOk = steps?.filter((item) => item.etape_id === step.id && item.statut === "validée")?.length > 0;
-
-  return (
-    <li
-      key={index}
-      className={`p-4 rounded-lg flex items-center justify-between ${
-        isOk
-          ? "bg-green-100 text-green-800 font-bold"
-          : step?.est_active
-          ? "bg-blue-100 text-blue-800 font-bold"
-          : "bg-gray-100 text-gray-600"
-      }`}
-    >
-      {/* Add confirm icon at the start if isOk */}
-      {isOk && <CheckCircleOutlined className="text-green-500 mr-2" style={{ fontSize: "24px" }} />}
-
-      {/* Step Name */}
-      <div className="flex flex-col">
-        <span>{step?.nom}</span>
-        <span className="text-sm text-gray-500">{`Début: ${new Date(step?.date_debut).toLocaleDateString()} - Fin: ${new Date(step?.date_fin).toLocaleDateString()}`}</span>
-      </div>
-    </li>
-  );
-})}
-{" "}
-              </ul>{" "}
-            </div>{" "}
-          </div>{" "}
-        </div>{" "}
-      </main>{" "}
+              <h2 className="text-lg font-bold">Motivation</h2>
+              <p className="text-gray-600">{motivation}</p>
+              <h2 className="text-lg font-bold mt-6">Étapes</h2>
+              <ul className="list-disc list-inside">
+                {steps.map(step => (
+                  <li key={step.etape_id} className={`text-gray-600 ${step.statut === "validée" ? "text-green-500" : "text-red-500"}`}>
+                    Étape ID: {step.etape_id} - Statut: {step.statut}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
   );
 };
 
-const InfoItem = ({ label, value }) => (
-  <div className="flex justify-between items-center">
-    {" "}
-    <span className="font-semibold text-gray-800">{label}</span>{" "}
-    <span className="text-gray-600">{value}</span>{" "}
-  </div>
-);
 export default CandidateDashboard;

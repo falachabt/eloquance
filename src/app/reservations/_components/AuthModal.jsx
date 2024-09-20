@@ -40,8 +40,7 @@ export const AuthModal = () => {
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [isOtpSent, setIsOtpSent] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [emailLoading, setEmailLoading] = useState(false);
+ const [emailLoading, setEmailLoading] = useState(false);
   const [otpLoading, setOtpLoading] = useState(false);
   const router = useRouter();
 
@@ -122,7 +121,7 @@ export const AuthModal = () => {
 
     try {
       // Verify OTP
-      const { data, error: verifyError } = await supabase.auth.verifyOtp({
+      const {  error: verifyError } = await supabase.auth.verifyOtp({
         email,
         token: otp,
         type: "magiclink",

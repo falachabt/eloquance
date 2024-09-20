@@ -2,8 +2,6 @@
 import { message } from "antd";
 import { notchpay } from "@/lib/notchpay";
 import { supabase } from "@/lib/supabase"
-import Cookies from "js-cookie"; // Import js-cookie
-
 
 
 

@@ -4,7 +4,7 @@ import { Table, Button, Drawer, Form, Input, DatePicker, Select, message, Modal,
 import { supabase } from "@/lib/supabase"; 
 import moment from 'moment';
 import Navbar from '../candidats/NavBar';
-const { Header, Content } = Layout;
+const {  Content } = Layout;
 
 const AdminPage = () => {
   const [steps, setSteps] = useState([]);

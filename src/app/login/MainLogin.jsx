@@ -18,7 +18,7 @@ export const LoginPage = () => {
     e.preventDefault();
     try {
       // Implement your login logic here
-      const { data , error }  = await supabase.auth.signInWithPassword({ email, password })
+      const {  error }  = await supabase.auth.signInWithPassword({ email, password })
      if(error){
         message.error("echece de la connexion")
      }

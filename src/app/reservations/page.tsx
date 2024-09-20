@@ -1,9 +1,7 @@
 import Footer from "@/components/Footer";
 import Header from "@/components/Header";;
-import { Button, Divider } from "antd";
 import {  EloquenceCompetitionReservation } from "./_components/Reservations"
 
-import { postData, sendEmail } from "@/lib/sendEmail"
 export default function ReservationPage() {
   return (
     <div className="h-full flex flex-col">

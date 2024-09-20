@@ -6,7 +6,7 @@ import { inscription_pay } from "./payment.utils"
 
 export async function checkOtp(email, otp){
  // Verify OTP
- const { data, error: verifyError } = await supabase.auth.verifyOtp({
+ const { error: verifyError } = await supabase.auth.verifyOtp({
     email,
     token: otp,
     type: "magiclink",
@@ -43,14 +43,14 @@ export async function checkIfEmail(email) {
     try {
 
         // check if the user is alearidy a candidate
-        const { data: candidate, error: candidateError } = await supabseAdmin.from("candidats").select("*").eq("email", email).maybeSingle();
+        const { data: candidate } = await supabseAdmin.from("candidats").select("*").eq("email", email).maybeSingle();
 
         if (candidate) {
             throw "Already a candidate";
         }
 
         
-      const { data: user, error: createUserError } = await supabseAdmin.auth.admin.createUser({
+      const {  error: createUserError } = await supabseAdmin.auth.admin.createUser({
         email: email,
         email_confirm: true,
       });
@@ -101,7 +101,7 @@ export async function checkIfEmail(email) {
   export const pay_inscription = async (email) => {
     try {
         const { trx_id , url } = await inscription_pay(true);
-        const { data , error} = await supabase.from("candidats").update({ trx_id }).eq("email", email);
+         await supabase.from("candidats").update({ trx_id }).eq("email", email);
 
         
         window.open(url)

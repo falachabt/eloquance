@@ -1,6 +1,7 @@
-import { MailOutlined, PhoneOutlined, FacebookOutlined } from '@ant-design/icons'
-import Link from 'next/link'
-import React from 'react'
+import { MailOutlined, PhoneOutlined, FacebookOutlined } from '@ant-design/icons';
+import Image from 'next/image';
+import Link from 'next/link';
+import React from 'react';
 
 export const Footer = () => {
   return (
@@ -8,14 +9,14 @@ export const Footer = () => {
       <div className="w-full max-w-screen-xl mx-auto px-4">
         <div className="flex flex-wrap items-center justify-between">
           <Link href="/" className="flex items-center space-x-3 rtl:space-x-reverse">
-            <img src="/assets/logo.svg" className="h-12" alt="Comète Logo" />
+            <Image src="/assets/logo.svg" width={120} height={60} className="h-12 w-auto" alt="Comète Logo" />
           </Link>
-          <div className="flex flex-wrap items-center text-sm text-gray-500">
+          <nav className="flex flex-wrap items-center text-sm text-gray-500">
             <Link href="#" className="hover:underline mr-4">À propos</Link>
             <Link href="#" className="hover:underline mr-4">Politique de confidentialité</Link>
             <Link href="#" className="hover:underline mr-4">Licence</Link>
             <Link href="#" className="hover:underline">Contact</Link>
-          </div>
+          </nav>
         </div>
         <hr className="my-3 border-gray-200" />
         <div className="flex flex-wrap items-center justify-between text-sm text-gray-500">
@@ -39,7 +40,7 @@ export const Footer = () => {
         </div>
       </div>
     </footer>
-  )
-}
+  );
+};
 
-export default Footer
+export default Footer;

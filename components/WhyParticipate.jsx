@@ -103,4 +103,6 @@ const Feature = ({ title, description, icon, index }) => {
       </p>
     </div>
   );
-};
+}
+
+export default WhyParticipate;
