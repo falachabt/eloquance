@@ -71,7 +71,7 @@ const fetchCandidateData = async () => {
 };
 
 const CandidateDashboard = () => {
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [ setIsUpdating] = useState(false);
   const router = useRouter();
 
   // Use SWR for data fetching
@@ -79,10 +79,10 @@ const CandidateDashboard = () => {
     revalidateOnFocus: false,
     shouldRetryOnError: false,
   });
-  const { data: consours_steps, error: steps_error } = useSWR("steps", fetchSteps, {
-    revalidateOnFocus: false,
-    shouldRetryOnError: false,
-  });
+  // const { data: consours_steps, error: steps_error } = useSWR("steps", fetchSteps, {
+  //   revalidateOnFocus: false,
+  //   shouldRetryOnError: false,
+  // });
 
   if (error) {
     if (error.message === "Utilisateur non connecté") {

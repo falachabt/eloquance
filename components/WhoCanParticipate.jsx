@@ -23,7 +23,7 @@ export const EligibilitySection = () => (
           <div>
             <h3 className="text-2xl font-semibold">Qui peut participer ?</h3>
             <p className="text-gray-300">
-              Le concours est ouvert aux jeunes Camerounais âgés de 16 à 30 ans, résidant au Cameroun ou à l'étranger, capables de s'exprimer couramment en français.
+              {"Le concours est ouvert aux jeunes Camerounais âgés de 16 à 30 ans, résidant au Cameroun ou à l'étranger, capables de s'exprimer couramment en français."}
             </p>
           </div>
         </div>
@@ -56,7 +56,7 @@ export const EligibilitySection = () => (
           <div>
             <h3 className="text-2xl font-semibold">Comment participer ?</h3>
             <p className="text-gray-300">
-              Pour participer, inscrivez-vous en ligne via notre plateforme officielle à partir du 30 septembre. Vous devrez soumettre une vidéo de présélection et répondre aux critères d'éligibilité.
+             {" Pour participer, inscrivez-vous en ligne via notre plateforme officielle à partir du 30 septembre. Vous devrez soumettre une vidéo de présélection et répondre aux critères d'éligibilité."}
             </p>
           </div>
         </div>

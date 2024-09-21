@@ -3,8 +3,6 @@ import React from 'react';
 import { Typography } from 'antd';
 import Link from 'next/link';
 
-const { Title, Paragraph } = Typography;
-
 export function HeroSection() {
   return (
     <section className="bg-[#193A5D] dark:bg-gray-900">
@@ -16,7 +14,7 @@ export function HeroSection() {
             <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd"></path>
           </svg>
         </a>
-        <h1 className="mb-4 text-4xl font-extrabold tracking-tight leading-none text-gray-200 md:text-5xl lg:text-6xl dark:text-white">Rejoignez le Concours d'Éloquence 2024</h1>
+        <h1 className="mb-4 text-4xl font-extrabold tracking-tight leading-none text-gray-200 md:text-5xl lg:text-6xl dark:text-white">{"Rejoignez le Concours d'Éloquence 2024"}</h1>
         <p className="mb-8 text-lg font-normal text-gray-500 lg:text-xl sm:px-16 xl:px-48 dark:text-gray-400"> Développez vos compétences en art oratoire, inspirez votre audience, et courez la chance de gagner de magnifiques prix !</p>
         <div className="flex flex-col mb-8 lg:mb-16 space-y-4 sm:flex-row sm:justify-center sm:space-y-0 sm:space-x-4">
           <Link href="/signup" className="inline-flex justify-center items-center py-3 px-5 text-base font-medium text-center text-white rounded-lg bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:ring-primary-300 dark:focus:ring-primary-900">

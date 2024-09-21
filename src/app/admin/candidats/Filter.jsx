@@ -8,7 +8,7 @@ import { CheckCircleOutlined, CloseCircleOutlined, MinusCircleOutlined } from '@
 const { Content } = Layout;
 const { Option } = Select;
 const { Search } = Input;
-const { Title, Text } = Typography;
+const {  Text } = Typography;
 
 const CandidatesManagement = () => {
   const [candidates, setCandidates] = useState([]);
@@ -23,6 +23,8 @@ const CandidatesManagement = () => {
     fetchCandidates();
     fetchSteps();
     fetchCandidateSteps();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -93,7 +95,6 @@ const CandidatesManagement = () => {
         throw fetchError;
       }
   
-      let result;
       if (existingEntry) {
         // 2. Si une entrée existe, on la met à jour
         const { data, error } = await supabase
@@ -103,7 +104,6 @@ const CandidatesManagement = () => {
           .eq('etape_id', stepId);
   
         if (error) throw error;
-        result = data;
       } else {
         // 3. Si aucune entrée n'existe, on en crée une nouvelle
         const { data, error } = await supabase

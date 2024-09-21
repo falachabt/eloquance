@@ -69,7 +69,7 @@ export function WhyParticipate() {
           Pourquoi participer ?
         </h2>
         <p className="text-lg text-neutral-600 mt-4">
-          Rejoignez le concours et saisissez l'opportunité de briller, d'enrichir vos compétences et de remporter des récompenses exceptionnelles.
+         {" Rejoignez le concours et saisissez l'opportunité de briller, d'enrichir vos compétences et de remporter des récompenses exceptionnelles."}
         </p>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 relative z-10 py-10 max-w-7xl mx-auto">

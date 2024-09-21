@@ -64,7 +64,7 @@ const PageVotesEloquence = () => {
   const [etapeStatus, setEtapeStatus] = useState('loading');
   const [tempsRestant, setTempsRestant] = useState(0);
   const [votes, setVotes] = useState([]);
-  const [totalVotes, setTotalVotes] = useState(0);
+  const [, setTotalVotes] = useState(0);
 
   const { data: activeStep, error: activeStepError } = useSWR('etapes_concours_active', fetchActiveStep, {
     refreshInterval: 0,
@@ -107,6 +107,7 @@ const PageVotesEloquence = () => {
         subscription.unsubscribe();
       };
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeStep]);
 
   useEffect(() => {
@@ -165,7 +166,7 @@ const PageVotesEloquence = () => {
       case 'before':
         return (
           <div className="text-center text-2xl font-bold text-primary-900 mb-8">
-            L'étape commence dans : {formatTemps(tempsRestant)}
+           {"L'étape commence dans : "} {formatTemps(tempsRestant)}
           </div>
         );
       case 'during':
@@ -219,7 +220,7 @@ const PageVotesEloquence = () => {
     setCandidatSelectionne(null);
   };
 
-  if (activeStepError) return <div>Erreur de chargement de l'étape active</div>;
+  if (activeStepError) return <div> {"Erreur de chargement de l'étape active"} </div>;
   if (candidatsError) return <div>Erreur de chargement des candidats</div>;
   if (!activeStep || !candidats) return <div>Chargement...</div>;
 

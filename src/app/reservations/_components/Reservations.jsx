@@ -141,7 +141,7 @@ export const EloquenceCompetitionReservation = () => {
             <Card className="shadow-2xl">
               <Title level={2} className="text-center mb-4 text-primary-500">Réservation</Title>
               <Paragraph className="text-center mb-8">
-                Réservez vos places pour notre concours d'éloquence exceptionnel. Prix par place : 1000 FCFA
+                {" Réservez vos places pour notre concours d'éloquence exceptionnel. Prix par place : 1000 FCFA "}
               </Paragraph>
               <Steps current={currentStep} className="mb-8">
                 {steps.map(item => (

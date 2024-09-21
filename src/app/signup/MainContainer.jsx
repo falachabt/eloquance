@@ -1,7 +1,6 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { Form, Input, Button, Checkbox, message } from 'antd';
-import Image from 'next/image';
 import { checkOtp, insertCandidatData, pay_inscription, sendVerificationCode, updateUserPassword } from "./utils";
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -13,7 +12,7 @@ export const SignUpForm = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({});
   const router = useRouter();
-  const [insStep, setInsStep] = useState(null);
+  const [, setInsStep] = useState(null);
 
   useEffect(() => {
     fetchIns();
@@ -196,7 +195,7 @@ export const SignUpForm = () => {
             ]}
           >
             <Checkbox className="text-gray-600">
-              J'accepte les <a href="#" className="font-medium text-primary-600 hover:underline">Conditions d'utilisation</a>
+              {"J'accepte les"} <a href="#" className="font-medium text-primary-600 hover:underline">{"Conditions d'utilisation"}</a>
             </Checkbox>
           </Form.Item>
         </>

@@ -1,5 +1,27 @@
+
+
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "tjwtnqayxmqotytnfixq.supabase.co",
+        pathname: "**",
+      },
+      {
+        protocol: "https",
+        hostname: "https://api.dicebear.com",
+        pathname: "**",
+      },
+      {
+        protocol: "https",
+        hostname: "i.ibb.co",
+        pathname: "**",
+      },
+    ],
+  },
   env: {
     NOTCH_PAY_KEY:
       "pk.qoIGxn6D2TV5WNAXk0kfeIe8aT8Jo99I7em5QD9axKbjshtLBJ2nsXJ6Y79mYJtCxjC6fJ3qi4AHQzNwkAGHrToq7LHoctOf9na5v0cKAJA8WUyUK4YvcHmqBoyZg",
