@@ -108,7 +108,7 @@ const CandidateDashboard = () => {
   const { name, email, age, school, city, motivation, payment_status, steps } = candidate;
 
   const updateProfilePicture = async (event) => {
-    const file = event.target.files[0];
+    // const file = event.target.files[0];
     setIsUpdating(true);
     await new Promise((resolve) => setTimeout(resolve, 2000));
     setIsUpdating(false);

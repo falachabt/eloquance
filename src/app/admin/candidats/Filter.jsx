@@ -32,6 +32,7 @@ const CandidatesManagement = () => {
     if (step) {
       setSelectedStep(parseInt(step));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams?.get("step")]);
 
   const fetchCandidates = async () => {
@@ -97,7 +98,7 @@ const CandidatesManagement = () => {
   
       if (existingEntry) {
         // 2. Si une entrée existe, on la met à jour
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from('candidats_etapes')
           .update({ statut })
           .eq('candidat_id', candidatId)
