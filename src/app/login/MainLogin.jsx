@@ -137,7 +137,7 @@ export const LoginPage = () => {
                   />
                 </div>
               </div>
-            ) : null}
+            ) : ""}
 
             {isResetMode && resetStep === 2 ? (
               <div>
@@ -156,7 +156,7 @@ export const LoginPage = () => {
                   />
                 </div>
               </div>
-            ) : null}
+            ) : ""}
 
             <div>
               <button
