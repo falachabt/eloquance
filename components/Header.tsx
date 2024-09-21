@@ -31,7 +31,7 @@ const Header = () => {
           </Link>
           <div className="flex items-center lg:order-2">
             <Link
-              href="#"
+              href="/login"
               className="max-sm:hidden dark:text-white text-primary-700 border border-primary-700 hover:bg-primary-700 hover:text-white focus:ring-4 focus:ring-primary-300 dark:focus:ring-primary-900 font-medium rounded-lg text-sm px-4 lg:px-5 py-2 lg:py-2.5 mr-2"
             >
               Se connecter

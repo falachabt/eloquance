@@ -4,6 +4,8 @@ import { Form, Input, Button, Checkbox, message } from 'antd';
 import { checkOtp, insertCandidatData, pay_inscription, sendVerificationCode, updateUserPassword } from "./utils";
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import Image from 'next/image';
+import Link from 'next/link';
 
 const { TextArea } = Input;
 
@@ -214,20 +216,61 @@ export const SignUpForm = () => {
   ];
 
   return (
-    <div>
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={nextStep}
-        onFinishFailed={onFinishFailed}
-      >
-        <h2 className="text-2xl font-bold">{steps[currentStep].title}</h2>
-        {steps[currentStep].content}
-        <div className="flex justify-between mt-4">
-          {currentStep > 0 && <Button onClick={prevStep}>Précédent</Button>}
-          {currentStep < steps.length - 1 && <Button type="primary" htmlType="submit">Suivant</Button>}
+    <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md w-full space-y-8">
+      <div  className='w-full flex justify-center'>
+        <Link href={"/"} >
+         <Image src={"/assets/logo.svg"} alt='comète'  width={180} height={160} /> 
+        </Link> 
+      </div>
+        <div className="bg-white max-sm:bg-transparent max-sm:pt-2 shadow-lg rounded-lg p-8 space-y-6">
+          <h2 className="text-2xl font-bold text-gray-900 text-center">{steps[currentStep].title}</h2>
+          <Form
+            form={form}
+            name="signup-form"
+            layout="vertical"
+            initialValues={{ remember: true }}
+            onFinishFailed={onFinishFailed}
+            autoComplete="off"
+            className="space-y-4"
+          >
+            {steps[currentStep].content}
+            <div className="flex justify-between">
+              {currentStep > 0 && (
+                <Button onClick={prevStep} className="text-primary-500 hover:text-primary-600">
+                  Précédent
+                </Button>
+              )}
+              <Button type="primary" onClick={nextStep}>
+                {currentStep === steps.length - 1 ? 'Terminer' : 'Suivant'}
+              </Button>
+            </div>
+          </Form>
+
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">
+                  { 'Déjà inscrit ?'}
+                </span>
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <Link href={"/login"} >
+              <button
+                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                >
+                { 'Se connecter ?'}
+              </button>
+                </Link> 
+            </div>
+          </div>
         </div>
-      </Form>
+      </div>
     </div>
   );
 };

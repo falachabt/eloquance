@@ -1,11 +1,9 @@
 "use client";
 import React from 'react';
-import { Carousel } from 'antd';
-import Image from 'next/image';
+import { Carousel, Image } from 'antd';
+// import Image from 'next/image';
 
 const contentStyle = {
-  maxHeight: '360px',
-  color: '#fff',
   lineHeight: '160px',
   textAlign: 'center',
   background: '#FED536',
@@ -21,14 +19,15 @@ export const OldSessions = () => (
       <div>
         <Carousel autoplay arrows infinite={false}>
           {Array.from({ length: 7 }, (_, index) => index + 1).map((item) => (
-            <div style={contentStyle} key={item}>
+            <div style={contentStyle} className=' h-[380px] w-[380px] ' key={item}>
               <Image
-                className='h-[360px] w-full'
+                className=' object-contain '
                 src={`/assets/${item}.jpg`}
                 alt={`Old Session ${item}`}
-                width={800} // ajustez la largeur
-                height={360} // ajustez la hauteur
-                layout="responsive" // optionnel, ajuste le comportement d'affichage
+                // width={400} // ajustez la largeur
+                // height={360} // ajustez la hauteur
+                fill={true}
+                // layout="responsive" // optionnel, ajuste le comportement d'affichage
               />
             </div>
           ))}
