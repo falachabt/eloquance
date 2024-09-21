@@ -43,7 +43,7 @@ const Page = () => {
         message.error("Erreur avec vos identifiants, ceci est une page réservée");
       }
     }else{
-      console.log("no user bro")
+      // console.log("no user bro")
     }
   }
 
@@ -87,3 +87,4 @@ const Page = () => {
 }
 
 export default Page;
+
