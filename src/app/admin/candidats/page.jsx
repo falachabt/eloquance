@@ -1,7 +1,7 @@
 "use client"
 // import Navbar from '../components/Navbar';  // Assurez-vous que le chemin est correct
 // import CandidatsTable from '../components/CandidatsTable';
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import  Navbar from "./NavBar"
 import CandidatsTable from "./Filter"
@@ -26,7 +26,9 @@ const AdminCandidatsPage = () => {
       <Navbar title='Candidats' />
       <div className="container mx-auto mt-8">
         <h1 className="text-2xl font-bold mb-4">Gestion des Candidats</h1>
+      <Suspense>
         <CandidatsTable candidats={candidats} />
+        </Suspense> 
       </div>
     </div>
   );
