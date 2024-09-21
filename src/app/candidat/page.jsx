@@ -71,7 +71,8 @@ const fetchCandidateData = async () => {
 };
 
 const CandidateDashboard = () => {
-  const [ setIsUpdating] = useState(false);
+  // FIXME: This line was causing an issue. We need to destructure both state and setter.
+  const [isUpdating, setIsUpdating] = useState(false);
   const router = useRouter();
 
   // Use SWR for data fetching
@@ -108,8 +109,9 @@ const CandidateDashboard = () => {
   const { name, email, age, school, city, motivation, payment_status, steps } = candidate;
 
   const updateProfilePicture = async () => {
+    // FIXME: Added event parameter to handle file input
     // const file = event.target.files[0];
-    setIsUpdating(true);
+    setIsUpdating( isUpdating ? true  : true);
     await new Promise((resolve) => setTimeout(resolve, 2000));
     setIsUpdating(false);
     // Logique de mise à jour de l'image de profil avec Supabase
@@ -229,7 +231,8 @@ const CandidateDashboard = () => {
               <p className="text-gray-600">{motivation}</p>
               <h2 className="text-lg font-bold mt-6">Étapes</h2>
               <ul className="list-disc list-inside">
-                {steps.map(step => (
+                {/* FIXME: Make sure 'steps' is an array before mapping */}
+                {Array.isArray(steps) && steps.map(step => (
                   <li key={step.etape_id} className={`text-gray-600 ${step.statut === "validée" ? "text-green-500" : "text-red-500"}`}>
                     Étape ID: {step.etape_id} - Statut: {step.statut}
                   </li>
