@@ -17,7 +17,7 @@ const Header = () => {
   };
 
   return (
-    <header className="sticky top-0 z-50">
+    <header className="sticky top-0 z-50 w-full">
       <nav className="bg-white border-gray-200 px-4 lg:px-6 py-2.5 dark:bg-gray-800">
         <div className="flex flex-wrap justify-between items-center mx-auto max-w-screen-xl">
           <Link href="/" className="flex items-center">
@@ -32,7 +32,7 @@ const Header = () => {
           <div className="flex items-center lg:order-2">
             <Link
               href="/login"
-              className="max-sm:hidden dark:text-white text-primary-700 border border-primary-700 hover:bg-primary-700 hover:text-white focus:ring-4 focus:ring-primary-300 dark:focus:ring-primary-900 font-medium rounded-lg text-sm px-4 lg:px-5 py-2 lg:py-2.5 mr-2"
+              className="hidden sm:inline-block dark:text-white text-primary-700 border border-primary-700 hover:bg-primary-700 hover:text-white focus:ring-4 focus:ring-primary-300 dark:focus:ring-primary-900 font-medium rounded-lg text-sm px-4 lg:px-5 py-2 lg:py-2.5 mr-2"
             >
               Se connecter
             </Link>
@@ -77,9 +77,9 @@ const Header = () => {
             </button>
           </div>
           <div
-            className={`lg:flex lg:w-auto lg:order-1 ${
+            className={`${
               isMenuOpen ? "block" : "hidden"
-            }`}
+            } w-full lg:flex lg:w-auto lg:order-1`}
             id="mobile-menu-2"
           >
             <ul className="flex flex-col mt-4 font-medium lg:flex-row lg:space-x-8 lg:mt-0">
