@@ -12,7 +12,7 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "https://api.dicebear.com",
+        hostname: "api.dicebear.com",
         pathname: "**",
       },
       {
