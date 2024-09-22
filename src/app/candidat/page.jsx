@@ -107,7 +107,7 @@ const CandidateDashboard = () => {
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth <= 768 : false);
 
   const { data: candidateData, error: candidateError, mutate: mutateCandidate, isValidating: isValidatingCandidate } = useSWR('candidateData', fetcher);
-  const { data: concoursEtapes, error: etapesError, mutate: mutateEtapes, isValidating: isValidatingEtapes } = useSWR('concoursEtapes', fetcher);
+  const { data: concoursEtapes, error: etapesError,  isValidating: isValidatingEtapes } = useSWR('concoursEtapes', fetcher);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth <= 768);

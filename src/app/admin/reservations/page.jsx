@@ -7,7 +7,7 @@ import { Input, Table, Modal, Button, AutoComplete, message, Descriptions, Tag, 
 import { SearchOutlined, CheckOutlined, CloseOutlined, UserOutlined, CheckCircleOutlined } from '@ant-design/icons';
 import Navbar from '../candidats/NavBar';
 
-const fetcher = async (url) => {
+const fetcher = async () => {
   const { data, error } = await supabase
     .from('reservations')
     .select('*')
@@ -21,7 +21,7 @@ export default function GestionReservations() {
   const [searchValue, setSearchValue] = useState('');
   const [selectedReservation, setSelectedReservation] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const { data: reservations, error, mutate } = useSWR('/api/reservations', fetcher);
+  const { data: reservations,  mutate } = useSWR('/api/reservations', fetcher);
   const [stats, setStats] = useState({ total: 0, used: 0 });
 
   useEffect(() => {
@@ -59,7 +59,7 @@ export default function GestionReservations() {
         return;
       }
 
-      const { data, error } = await supabase
+      const {  error } = await supabase
         .from('reservations')
         .update({ used_at: new Date().toISOString() })
         .eq('id', selectedReservation.id);

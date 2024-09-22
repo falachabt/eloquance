@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from "@/lib/supabase";
 import { CheckCircleOutlined, CloseCircleOutlined, MinusCircleOutlined } from '@ant-design/icons';
 
-const { Content } = Layout;
 const { Option } = Select;
 const { Search } = Input;
 const {  Text } = Typography;
