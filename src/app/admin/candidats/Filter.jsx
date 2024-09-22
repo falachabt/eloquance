@@ -1,6 +1,6 @@
 "use client"
 import React, { useEffect, useState } from 'react';
-import { Table, Select, message, Layout, Card, Input, Tag, Row, Col, Typography, Statistic } from 'antd';
+import { Table, Select, message,  Card, Input, Tag, Row, Col, Typography, Statistic } from 'antd';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from "@/lib/supabase";
 import { CheckCircleOutlined, CloseCircleOutlined, MinusCircleOutlined } from '@ant-design/icons';
