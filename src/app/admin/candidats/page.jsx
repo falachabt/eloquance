@@ -24,7 +24,7 @@ const AdminCandidatsPage = () => {
   return (
     <div>
       <Navbar title='Candidats' />
-      <div className="container mx-auto mt-8">
+      <div className=" p-4 md:p-6 mt-8">
         <h1 className="text-2xl font-bold mb-4">Gestion des Candidats</h1>
       <Suspense>
         <CandidatsTable candidats={candidats} />

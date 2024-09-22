@@ -1,248 +1,436 @@
 "use client";
+
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import useSWR from 'swr';
 import { supabase } from "@/lib/supabase";
-import Image from "next/image";
-import { useRouter } from "next/navigation";
-import React, { useState } from "react";
-import useSWR from "swr";
-import { pay_inscription } from "../signup/utils";
-import {
-  ReloadOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  HourglassOutlined,
-} from "@ant-design/icons";
 import { notchpay } from "@/lib/notchpay";
+import { 
+  Layout, Menu, Card, Avatar, Statistic, Progress, 
+  Timeline, Table, Tag, Spin, Alert, Row, Col, Typography, Anchor, Flex
+} from 'antd';
+import { 
+  UserOutlined, MailOutlined, HomeOutlined, BookOutlined,
+  CheckCircleOutlined, ClockCircleOutlined, CloseCircleOutlined,
+  DollarOutlined, TrophyOutlined, LikeOutlined,LogoutOutlined, 
+} from '@ant-design/icons';
 
-const fetchSteps = async () => {
-  const { data, error } = await supabase.from("etapes_concours").select("*");
-  if (error) throw error;
-  return data;
-};
+const { Header, Content } = Layout;
+const { Title, Paragraph } = Typography;
+const { Link } = Anchor;
 
-const fetchCandidateData = async () => {
-  const { data: { user }, error } = await supabase.auth.getUser();
-  if (error || !user) {
-    throw new Error("Utilisateur non connecté");
+async function updateAllCandidatePayments() {
+  try {
+    const { data: candidates, error } = await supabase
+      .from('candidats')
+      .select('id, trx_id')
+      .eq('payment_status', false)
+      .not('trx_id', 'is', null);
+
+    if (error) throw error;
+
+    const updates = candidates.map(async (candidate) => {
+      const paymentDetails = await notchpay.payments.verifyAndFetchPayment(candidate.trx_id);
+      
+      if (paymentDetails?.transaction?.status === "complete") {
+        const { error: updateError } = await supabase
+          .from('candidats')
+          .update({ payment_status: true })
+          .eq('id', candidate.id);
+
+        if (updateError) console.error(`Erreur lors de la mise à jour du candidat ${candidate.id}:`, updateError);
+        return { id: candidate.id, updated: !updateError };
+      }
+      return { id: candidate.id, updated: false };
+    });
+
+    const results = await Promise.all(updates);
+    console.log('Résultats de la mise à jour des paiements:', results);
+
+    return results;
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour des paiements:', error);
+    throw error;
   }
+}
 
-  const { data: candidate, error: candidateError } = await supabase
-    .from("candidats")
-    .select("*, candidats_etapes(*)")
-    .eq("email", user.email)
-    .single();
+const fetcher = async (url) => {
+  if (url === 'candidateData') {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) throw new Error("Utilisateur non connecté");
 
-  if (candidateError) {
-    throw new Error("Impossible de charger les données du candidat.");
-  }
-
-  const paymentDetails = await notchpay.payments.verifyAndFetchPayment(candidate?.trx_id);
-
-  // Insérer l'étape d'inscription si le paiement est complet
-  if (paymentDetails?.transaction?.status === "complete") {
-    const stps = await fetchSteps();
-    const stp_id = stps?.find(step => step.ordre === 1)?.id;
-    const { error: insertError } = await supabase
-      .from("candidats_etapes")
-      .insert([{ candidat_id: candidate.id, etape_id: stp_id, statut: "validée" }]);
-
-    if (insertError) {
-      console.error("Erreur lors de l'insertion de l'étape d'inscription :", insertError);
+    if (user.user_metadata && user.user_metadata.role === "admin") {
+      await supabase.auth.signOut();
+      throw new Error("Admin redirect");
     }
+
+    const { data: candidate, error: candidateError } = await supabase
+      .from("candidats")
+      .select(`
+        *,
+        candidats_etapes(*),
+        votes(id, email, created_at, is_paid_vote)
+      `)
+      .eq("email", user.email)
+      .maybeSingle();
+
+    if (candidateError) throw new Error("Impossible de charger les données du candidat.");
+
+    if (!candidate) return null;
+
+    if (!candidate.payment_status && candidate.trx_id) {
+      const paymentDetails = await notchpay.payments.verifyAndFetchPayment(candidate.trx_id);
+      if (paymentDetails?.transaction?.status === "complete") {
+        await supabase
+          .from("candidats")
+          .update({ payment_status: true })
+          .eq("id", candidate.id);
+        candidate.payment_status = true;
+      }
+    }
+
+    return candidate;
+  } else if (url === 'concoursEtapes') {
+    const { data: etapes, error: etapesError } = await supabase
+      .from("etapes_concours")
+      .select("*")
+      .order('ordre', { ascending: true });
+
+    if (etapesError) throw new Error("Impossible de charger les étapes du concours.");
+
+    return etapes;
   }
-
-  // Récupérer les étapes associées au candidat
-  const { data: steps, error: stepsError } = await supabase
-    .from("candidats_etapes")
-    .select("etape_id, statut")
-    .eq("candidat_id", candidate.id);
-
-  if (stepsError) {
-    throw new Error("Impossible de charger les étapes du candidat.");
-  }
-
-  return {
-    user,
-    candidate: {
-      ...candidate,
-      payment_status: paymentDetails?.transaction?.status,
-      steps,
-    },
-  };
 };
 
 const CandidateDashboard = () => {
-  // FIXME: This line was causing an issue. We need to destructure both state and setter.
-  const [isUpdating, setIsUpdating] = useState(false);
   const router = useRouter();
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth <= 768 : false);
 
-  // Use SWR for data fetching
-  const { data, error, mutate } = useSWR("candidateData", fetchCandidateData, {
-    revalidateOnFocus: false,
-    shouldRetryOnError: false,
-  });
-  // const { data: consours_steps, error: steps_error } = useSWR("steps", fetchSteps, {
-  //   revalidateOnFocus: false,
-  //   shouldRetryOnError: false,
-  // });
+  const { data: candidateData, error: candidateError, mutate: mutateCandidate, isValidating: isValidatingCandidate } = useSWR('candidateData', fetcher);
+  const { data: concoursEtapes, error: etapesError, mutate: mutateEtapes, isValidating: isValidatingEtapes } = useSWR('concoursEtapes', fetcher);
 
-  if (error) {
-    if (error.message === "Utilisateur non connecté") {
-      router.push("/login");
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+
+    const candidateSubscription = supabase
+      .channel('candidats_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'candidats_etapes' }, () => {
+        mutateCandidate();
+      })
+      .subscribe();
+
+    const votesSubscription = supabase
+      .channel('votes_changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'votes' }, () => {
+        mutateCandidate();
+      })
+      .subscribe();
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      supabase.removeChannel(candidateSubscription);
+      supabase.removeChannel(votesSubscription);
+    };
+  }, [mutateCandidate]);
+
+  useEffect(() => {
+    const updatePayments = async () => {
+      try {
+        await updateAllCandidatePayments();
+        mutateCandidate();
+      } catch (error) {
+        console.error('Erreur lors de la mise à jour des paiements:', error);
+      }
+    };
+  
+    updatePayments();
+    const intervalId = setInterval(updatePayments, 5 * 60 * 1000);
+    return () => clearInterval(intervalId);
+  }, [mutateCandidate]);
+
+  useEffect(() => {
+    if (candidateError && candidateError.message === "Admin redirect") {
+      router.push('/login');
+    }
+  }, [candidateError, router]);
+
+  if (candidateError) {
+    if (candidateError.message === "Utilisateur non connecté" || candidateError.message === "Admin redirect") {
+      router.push('/login');
       return null;
     }
+    return <Alert message="Erreur" description={candidateError.message} type="error" showIcon />;
+  }
+
+  if (etapesError) {
+    return <Alert message="Erreur" description={etapesError.message} type="error" showIcon />;
+  }
+
+  const isLoading = isValidatingCandidate || isValidatingEtapes;
+
+  if (isLoading) {
     return (
-      <div className="bg-primary-50 h-screen text-red-500 text-center py-10">
-        {error.message}
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <Spin size="large" />
       </div>
     );
   }
 
-  if (!data) {
-    return (
-      <div className="flex bg-primary-50 justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
+  if (candidateData === null) {
+    return <Alert message="Information" description="Aucune donnée de candidat trouvée. Veuillez vous inscrire au concours." type="info" showIcon />;
   }
 
-  const { user, candidate } = data;
-  const { name, email, age, school, city, motivation, payment_status, steps } = candidate;
+  if (!concoursEtapes || concoursEtapes.length === 0) {
+    return <Alert message="Information" description="Aucune étape de concours n'est actuellement disponible." type="info" showIcon />;
+  }
 
-  const updateProfilePicture = async () => {
-    // FIXME: Added event parameter to handle file input
-    // const file = event.target.files[0];
-    setIsUpdating( isUpdating ? true  : true);
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    setIsUpdating(false);
-    // Logique de mise à jour de l'image de profil avec Supabase
-  };
+  const { 
+    name, email, age, school, city, motivation, payment_status, votes, candidats_etapes 
+  } = candidateData;
 
-  const handlePayRetry = async () => {
+  const completedSteps = candidats_etapes.filter(e => e.statut === 'validée').length;
+  const totalSteps = concoursEtapes.length;
+  const progressPercentage = (completedSteps / totalSteps) * 100;
+
+  const handleLogout = async () => {
     try {
-      await pay_inscription(user.email);
-      mutate(); // Rafraîchir les données après le paiement
-    } catch (err) {
-      console.error("Erreur lors du paiement :", err);
+      await supabase.auth.signOut();
+      router.push('/login');
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error);
     }
   };
 
-  const renderPaymentStatusIcon = () => {
-    switch (payment_status) {
-      case "pending":
-        return <HourglassOutlined className="text-orange-500" style={{ fontSize: "24px" }} />;
-      case "complete":
-        return <CheckCircleOutlined className="text-green-500" style={{ fontSize: "24px" }} />;
-      default:
-        return <CloseCircleOutlined className="text-red-500" style={{ fontSize: "24px" }} />;
-    }
+
+  const renderProfileCard = () => (
+    <Card id="profile">
+      <Row gutter={16} align="middle">
+        <Col xs={24} sm={24} md={8} lg={6}>
+          <Avatar 
+            size={{ xs: 150, sm: 200, md: 250, lg: 300 }} 
+            src={`https://api.dicebear.com/6.x/initials/svg?seed=${name}`} 
+            style={{ margin: 'auto', display: 'block' }}
+          />
+        </Col>
+        <Col xs={24} sm={24} md={16} lg={18}>
+          <Title level={2}>{name}</Title>
+          <Paragraph><MailOutlined /> {email}</Paragraph>
+          <Paragraph><UserOutlined /> {age} ans</Paragraph>
+          <Paragraph><HomeOutlined /> {city}</Paragraph>
+          <Paragraph><BookOutlined /> {school}</Paragraph>
+          <Paragraph><strong>Motivation:</strong> {motivation}</Paragraph>
+          <Tag color={payment_status ? 'green' : 'red'}>
+            {payment_status ? 'Paiement validé' : 'Paiement en attente'}
+          </Tag>
+        </Col>
+      </Row>
+    </Card>
+  );
+
+  const renderProgressCard = () => (
+    <Card title="Progression du concours" id="progress">
+      <Progress
+        percent={progressPercentage.toFixed(2)}
+        status="active"
+        strokeColor={{
+          '0%': '#108ee9',
+          '100%': '#87d068',
+        }}
+      />
+      <Statistic 
+        title="Étapes complétées" 
+        value={completedSteps} 
+        suffix={`/ ${totalSteps}`}
+        prefix={<TrophyOutlined />}
+      />
+    </Card>
+  );
+
+  const renderVotesCard = () => (
+    <Card title="Statistiques des votes" id="votes">
+      <Row gutter={16}>
+        <Col span={12}>
+          <Statistic
+            title="Total des votes"
+            value={votes.length}
+            prefix={<LikeOutlined />}
+          />
+        </Col>
+        <Col span={12}>
+          <Statistic
+            title="Votes payants"
+            value={votes.filter(v => v.is_paid_vote).length}
+            prefix={<DollarOutlined />}
+          />
+        </Col>
+      </Row>
+    </Card>
+  );
+
+  const getStepStatus = (etape, index) => {
+    const candidatEtape = candidats_etapes.find(ce => ce.etape_id === etape.id);
+    const now = new Date();
+    const startDate = new Date(etape.date_debut);
+    const endDate = new Date(etape.date_fin);
+
+    const allPreviousStepsValidated = concoursEtapes.slice(0, index).every(prevEtape => {
+      const prevCandidatEtape = candidats_etapes.find(ce => ce.etape_id === prevEtape.id);
+      return prevCandidatEtape?.statut === 'validée';
+    });
+
+    if (!allPreviousStepsValidated) return 'blocked';
+    if (candidatEtape?.statut === 'validée') return 'finish';
+    if (candidatEtape?.statut === 'échouée') return 'error';
+    if (now < startDate) return 'wait';
+    if (now >= startDate && now <= endDate) return 'process';
+    return 'wait';
   };
+
+  const renderTimelineCard = () => (
+    <Card title="Chronologie des étapes" id="timeline">
+      <Timeline mode={isMobile ? "left" : "alternate"}>
+        {concoursEtapes.map((etape, index) => {
+          const status = getStepStatus(etape, index);
+          return (
+            <Timeline.Item
+              key={etape.id}
+              color={status === 'finish' ? 'green' : status === 'error' || status === 'blocked' ? 'red' : 'blue'}
+              dot={
+                status === 'finish' ? <CheckCircleOutlined /> :
+                status === 'error' || status === 'blocked' ? <CloseCircleOutlined /> :
+                status === 'process' ? <ClockCircleOutlined /> :
+                <ClockCircleOutlined />
+              }
+            >
+              <Card 
+                size="small" 
+                style={{ 
+                  width: isMobile ? '100%' : 300,
+                  backgroundColor: status === 'blocked' ? '#ffcccb' : 'white'
+                }}
+              >
+                <p style={{ fontWeight: 'bold' }}>{etape.nom}</p>
+                <p>{new Date(etape.date_debut).toLocaleDateString()} - {new Date(etape.date_fin).toLocaleDateString()}</p>
+                <Tag color={etape.est_active ? 'green' : 'default'}>
+                  {etape.est_active ? 'Active' : 'Inactive'}
+                </Tag>
+                {etape.votes_en_ligne && <Tag color="blue">Votes en ligne</Tag>}
+                {etape.votes_payants && <Tag color="gold">Votes payants</Tag>}
+                <Tag color={
+                  status === 'finish' ? 'green' :
+                  status === 'error' || status === 'blocked' ? 'red' :
+                  status === 'process' ? 'blue' :
+                  'default'
+                }>
+                  {status === 'finish' ? 'Validée' :
+                   status === 'error' ? 'Échouée' :
+                   status === 'blocked' ? 'Non accessible' :
+                   status === 'process' ? 'En cours' :
+                   'Non commencée'}
+                </Tag>
+              </Card>
+            </Timeline.Item>
+          );
+        })}
+      </Timeline>
+    </Card>
+  );
+
+  const renderVotesTable = () => {
+    const columns = [
+      {
+        title: 'Email',
+        dataIndex: 'email',
+        key: 'email',
+        ellipsis: true,
+      },
+      {
+        title: 'Date',
+        dataIndex: 'created_at',
+        key: 'created_at',
+        render: (text) => new Date(text).toLocaleString(),
+      },
+      {
+        title: 'Type',
+        dataIndex: 'is_paid_vote',
+        key: 'is_paid_vote',
+        render: (isPaid) => (
+          <Tag color={isPaid ? 'green' : 'blue'}>
+            {isPaid ? 'Payant' : 'Gratuit'}
+          </Tag>
+        ),
+      },
+    ];
+
+    return (
+      <Card title="Détails des votes">
+        <Table 
+          dataSource={votes} 
+          columns={columns} 
+          rowKey="id" 
+          scroll={{ x: true }}
+          pagination={{ pageSize: 5 }}
+        />
+      </Card>
+    );
+  };
+
+  const renderMobileMenu = () => (
+    <Anchor affix={false} className='flex ' onClick={e => e.preventDefault()}>
+<Flex>
+      <Link href="#profile" title="Profil" />
+      <Link href="#progress" title="Progression" />
+      <Link href="#timeline" title="Chronologie" />
+      <Link href="#votes" title="Votes" />
+  </Flex> 
+    </Anchor>
+  );
 
   return (
-    <div className="min-h-screen bg-opacity-95 bg-gray-50">
-      <header className="bg-white shadow-lg">
-        <div className="max-w-7xl mx-auto py-3 px-4 sm:px-6 lg:px-8 flex justify-between items-center">
-          <a href="/">
-            <Image
-              src={"/assets/logo.svg"}
-              width={110}
-              height={80}
-              alt="comète logo"
-            />
-          </a>
-          <h1 className="text-xl font-extrabold text-gray-900">Candidat</h1>
-          <div className={`px-4 py-2 rounded-full flex items-center`}>
-            {payment_status !== "complete" && (
-              <>
-                {renderPaymentStatusIcon()}
-                <ReloadOutlined
-                  className="ml-2 cursor-pointer text-blue-500"
-                  onClick={handlePayRetry}
-                />
-              </>
-            )}
-          </div>
+    <Layout>
+      <Header className="header" style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center' }}>
+          <div className="logo" />
+          <Menu theme="dark" mode="horizontal" defaultSelectedKeys={['1']}>
+            <Menu.Item key="1">Tableau de bord</Menu.Item>
+          </Menu>
         </div>
-      </header>
-      {/* Section that displays payment status */}
-      <section className="w-full bg-gray-100 py-2">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-center items-center space-x-4">
-            {renderPaymentStatusIcon()}
-            <span className="text-gray-600">
-              {payment_status === "pending"
-                ? "En attente du paiement"
-                : payment_status === "complete"
-                ? "Paiement complet"
-                : "Paiement échoué"}
-            </span>
-          </div>
+        <Menu theme="dark" mode="horizontal">
+          <Menu.SubMenu 
+            key="user" 
+            icon={<UserOutlined />} 
+            title={name || "Utilisateur"}
+          >
+            <Menu.Item key="logout" icon={<LogoutOutlined />} onClick={handleLogout}>
+              Déconnexion
+            </Menu.Item>
+          </Menu.SubMenu>
+        </Menu>
+      </Header>
+      <Content style={{ padding: '0 1px' }}>
+        {isMobile && renderMobileMenu()}
+        <div className="site-layout-content" style={{ padding: 7, minHeight: 380 }}>
+          <Row gutter={[16, 16]}>
+            <Col xs={24}>
+              {renderProfileCard()}
+            </Col>
+            <Col xs={24} md={12}>
+              {renderProgressCard()}
+            </Col>
+            <Col xs={24} md={12}>
+              {renderVotesCard()}
+            </Col>
+            <Col xs={24}>
+              {renderTimelineCard()}
+            </Col>
+            <Col xs={24}>
+              {renderVotesTable()}
+            </Col>
+          </Row>
         </div>
-      </section>
-      <main className="max-w-7xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col lg:flex-row gap-8">
-          <div className="w-full lg:w-2/5 bg-white shadow-xl rounded-lg overflow-hidden">
-            <div className="p-6">
-              <div className="flex flex-col items-center">
-                <div className="relative group">
-                  <Image
-                    src={`https://api.dicebear.com/6.x/initials/svg?seed=${name}`}
-                    alt="Profile"
-                    className="w-32 h-32 rounded-full object-cover border-4 border-blue-500 group-hover:opacity-75 transition-opacity duration-300"
-                    width={128}
-                    height={128}
-                  />
-                  <label
-                    htmlFor="avatar-upload"
-                    className="absolute bottom-0 right-0 bg-blue-500 rounded-full p-2 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-6 w-6 text-white"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M16 16v-1a4 4 0 00-8 0v1M12 12v6m0 0l-3-3m3 3l3-3"
-                      />
-                    </svg>
-                  </label>
-                  <input
-                    id="avatar-upload"
-                    type="file"
-                    onChange={updateProfilePicture}
-                    className="hidden"
-                  />
-                </div>
-                <h2 className="text-2xl font-bold mt-4">{name}</h2>
-                <p className="text-gray-600">{email}</p>
-                <p className="text-gray-600">Age: {age}</p>
-                <p className="text-gray-600">École: {school}</p>
-                <p className="text-gray-600">Ville: {city}</p>
-              </div>
-            </div>
-          </div>
-          <div className="w-full lg:w-3/5 bg-white shadow-xl rounded-lg overflow-hidden">
-            <div className="p-6">
-              <h2 className="text-lg font-bold">Motivation</h2>
-              <p className="text-gray-600">{motivation}</p>
-              <h2 className="text-lg font-bold mt-6">Étapes</h2>
-              <ul className="list-disc list-inside">
-                {/* FIXME: Make sure 'steps' is an array before mapping */}
-                {Array.isArray(steps) && steps.map(step => (
-                  <li key={step.etape_id} className={`text-gray-600 ${step.statut === "validée" ? "text-green-500" : "text-red-500"}`}>
-                    Étape ID: {step.etape_id} - Statut: {step.statut}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
+      </Content>
+    </Layout>
   );
 };
 

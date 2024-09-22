@@ -50,6 +50,9 @@ const Navbar = ({ title = "Tableau de bord" }) => {
           <Menu.Item key="2">
             <Link href="/admin/steps">Étapes</Link>
           </Menu.Item>
+          <Menu.Item key="2">
+            <Link href="/admin/reservations">Reservations</Link>
+          </Menu.Item>
           <Menu.Item key="3" onClick={handleLogout}>
             Déconnexion
           </Menu.Item>
@@ -61,6 +64,9 @@ const Navbar = ({ title = "Tableau de bord" }) => {
         </Link>
         <Link href="/admin/steps" className="text-white">
           Étapes
+        </Link>
+        <Link href="/admin/reservations" className="text-white">
+          Reservations
         </Link>
         <Button type='text' icon={<LogoutOutlined />} onClick={handleLogout} className="text-white">
           Déconnexion

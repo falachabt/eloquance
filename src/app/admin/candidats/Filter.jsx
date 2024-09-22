@@ -249,17 +249,16 @@ const CandidatesManagement = () => {
   
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Content style={{ padding: '20px' }}>
-        
-      <Row gutter={[16, 16]} style={{ marginBottom: '20px' }}>
+    <div style={{ minHeight: '100vh' }}>
+         
+         <Row gutter={[16, 16]} style={{ marginBottom: '20px' }}>
   {steps.map(step => (
     <Col
       key={step.id}
-      xs={19} // Full width on extra small screens
-      sm={9} // Half width on small screens
-      md={5}  // One-third width on medium screens
-      lg={4}  // One-fourth width on large screens
+      xs={24} // Full width on extra small screens
+      sm={12} // Half width on small screens
+      md={8}  // One-third width on medium screens
+      lg={6}  // One-fourth width on large screens
     >
       <Card className={step.est_active ? 'bg-green-100' : ''}>
         <Statistic
@@ -308,8 +307,7 @@ const CandidatesManagement = () => {
           pagination={{ pageSize: 10, showSizeChanger: true, showQuickJumper: true }}
           scroll={{ x: true }}
         />
-      </Content>
-    </Layout>
+    </div>
   );
 };
 
