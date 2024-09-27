@@ -151,7 +151,7 @@ const PageVotesEloquence = () => {
   };
 
   const refreshVotes = async (etapeId) => {
-    const { votes, totalVotes } = await fetchVotes(etapeId);
+    const { votes } = await fetchVotes(etapeId);
     setVotes(votes);
     mutate('votes'); // Trigger a re-render of components using the 'votes' key
   };
