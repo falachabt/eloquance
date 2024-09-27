@@ -259,7 +259,7 @@ export const SignUpForm = () => {
   const renderHomeLink = () => (
     <div className="mt-4 text-center">
       <Link href="/">
-        <span className="text-primary-600 hover:text-primary-500">Retour à la page d'accueil</span>
+        <span className="text-primary-600 hover:text-primary-500">{"Retour à la page d'accueil"}</span>
       </Link>
     </div>
   );
