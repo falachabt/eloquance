@@ -31,6 +31,7 @@ export default function GestionReservations() {
         used: reservations.filter(r => r.used_at).length
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reservations]);
 
   const handleSearch = (value) => {
@@ -204,6 +205,7 @@ const ReservationDetails = ({ reservation }) => {
     };
 
     verifyPayment();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reservation.trx_id]);
 
   const getPaymentStatusTag = () => {

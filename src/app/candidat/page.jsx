@@ -190,6 +190,7 @@ const CandidateDashboard = () => {
       supabase.removeChannel(candidateSubscription);
       supabase.removeChannel(votesSubscription);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mutateCandidate]);
 
   useEffect(() => {
@@ -205,12 +206,14 @@ const CandidateDashboard = () => {
     updatePayments();
     const intervalId = setInterval(updatePayments, 5 * 60 * 1000);
     return () => clearInterval(intervalId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mutateCandidate]);
 
   useEffect(() => {
     if (candidateError && candidateError.message === "Admin redirect") {
       router.push('/login');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [candidateError, router]);
 
   if (candidateError) {

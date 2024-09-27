@@ -16,6 +16,7 @@ const Page = () => {
       duration: 2,
       maxCount: 3,
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Function to handle login form submission

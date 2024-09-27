@@ -19,6 +19,7 @@ export const SignUpForm = () => {
 
   useEffect(() => {
     fetchIns();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchIns = async () => {

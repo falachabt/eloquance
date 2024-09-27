@@ -10,7 +10,7 @@ const REVALIDATE_INTERVAL = 4 * 60 * 1000; // 4 minutes in milliseconds
 const fetcher = () => updateVotePayments();
 
 export  function VotePaymentUpdater() {
-  const { data, error, mutate } = useSWR('/api/update-payments', fetcher, {
+  const {  error, mutate } = useSWR('/api/update-payments', fetcher, {
     refreshInterval: REVALIDATE_INTERVAL,
     revalidateOnFocus: true,
     revalidateOnReconnect: true,
@@ -33,6 +33,7 @@ export  function VotePaymentUpdater() {
     return () => {
       supabase.removeChannel(votesSubscription);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [handleVoteChange]);
 
   if (error) {

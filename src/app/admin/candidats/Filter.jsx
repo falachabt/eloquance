@@ -23,6 +23,7 @@ const CandidatesManagement = () => {
     fetchCandidates();
     fetchSteps();
     fetchCandidateSteps();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -30,10 +31,12 @@ const CandidatesManagement = () => {
     if (step) {
       setSelectedStep(parseInt(step));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams?.get("step")]);
 
   useEffect(() => {
     fetchVotes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedStep]);
 
   const fetchCandidates = async () => {

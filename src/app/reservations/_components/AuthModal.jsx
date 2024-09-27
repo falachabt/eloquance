@@ -100,6 +100,7 @@ export const AuthModal = () => {
     return () => {
       listener?.subscription.unsubscribe();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleEmailSubmit = async () => {

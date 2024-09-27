@@ -66,7 +66,6 @@ const PageVotesEloquence = () => {
   const [etapeStatus, setEtapeStatus] = useState('loading');
   const [tempsRestant, setTempsRestant] = useState(0);
   const [votes, setVotes] = useState([]);
-  const [totalVotes, setTotalVotes] = useState(0);
 
   const { data: activeStep, error: activeStepError } = useSWR('etapes_concours_active', fetchActiveStep, {
     refreshInterval: 10000, // Refresh every 10 seconds
@@ -99,6 +98,7 @@ const PageVotesEloquence = () => {
       supabase.removeChannel(etapesSubscription);
       supabase.removeChannel(candidatsSubscription);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -109,6 +109,7 @@ const PageVotesEloquence = () => {
         subscription.unsubscribe();
       };
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeStep]);
 
   useEffect(() => {
@@ -116,6 +117,7 @@ const PageVotesEloquence = () => {
       setTempsRestant((prevTemps) => (prevTemps > 0 ? prevTemps - 1 : 0));
     }, 1000);
     return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const updateEtapeStatus = (etape) => {
@@ -151,7 +153,6 @@ const PageVotesEloquence = () => {
   const refreshVotes = async (etapeId) => {
     const { votes, totalVotes } = await fetchVotes(etapeId);
     setVotes(votes);
-    setTotalVotes(totalVotes);
     mutate('votes'); // Trigger a re-render of components using the 'votes' key
   };
 
