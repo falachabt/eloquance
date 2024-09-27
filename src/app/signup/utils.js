@@ -121,7 +121,7 @@ export async function checkIfEmail(email) {
           .from('candidats')
           .insert([formData])
           .select();
-  
+ 
         if (error) {
           console.error("Error inserting candidat data:", error);
           throw error;
