@@ -1,6 +1,6 @@
-"use client";
+"use client"
 import React, { useEffect, useState } from 'react';
-import { Form, Input, Button, Checkbox, message, Spin } from 'antd';
+import { Form, Input, Button, Checkbox, message, Spin, Result } from 'antd';
 import { checkOtp, insertCandidatData, pay_inscription, sendVerificationCode, updateUserPassword } from "./utils";
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -14,8 +14,9 @@ export const SignUpForm = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState({});
   const router = useRouter();
-  const [, setInsStep] = useState(null);
+  const [insStep, setInsStep] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [inscriptionStatus, setInscriptionStatus] = useState('loading');
 
   useEffect(() => {
     fetchIns();
@@ -23,10 +24,34 @@ export const SignUpForm = () => {
   }, []);
 
   const fetchIns = async () => {
-    const { data, error } = await supabase.from("etapes_concours").select("*").eq("ordre", 1).maybeSingle();
-    if (error) throw error;
+    const { data, error } = await supabase
+      .from("etapes_concours")
+      .select("*")
+      .eq("ordre", 1)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Error fetching inscription step:", error);
+      setInscriptionStatus('error');
+      return;
+    }
+
     setInsStep(data);
-    return data;
+    checkInscriptionPeriod(data);
+  };
+
+  const checkInscriptionPeriod = (step) => {
+    const now = new Date();
+    const startDate = new Date(step.date_debut);
+    const endDate = step.date_fin ? new Date(step.date_fin) : null;
+
+    if (now < startDate) {
+      setInscriptionStatus('not-started');
+    } else if (endDate && now > endDate) {
+      setInscriptionStatus('ended');
+    } else {
+      setInscriptionStatus('active');
+    }
   };
 
   const onFinish = async () => {
@@ -223,14 +248,78 @@ export const SignUpForm = () => {
     },
   ];
 
+  const renderLogo = () => (
+    <div className='w-full flex justify-center mb-6'>
+      <Link href="/">
+        <Image src="/assets/logo.svg" alt='comète' width={180} height={160} /> 
+      </Link> 
+    </div>
+  );
+
+  const renderHomeLink = () => (
+    <div className="mt-4 text-center">
+      <Link href="/">
+        <span className="text-primary-600 hover:text-primary-500">Retour à la page d'accueil</span>
+      </Link>
+    </div>
+  );
+
+  if (inscriptionStatus === 'loading') {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
+        {renderLogo()}
+        <Spin size="large" />
+        {renderHomeLink()}
+      </div>
+    );
+  }
+
+  if (inscriptionStatus === 'not-started') {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
+        {renderLogo()}
+        <Result
+          status="info"
+          title="L'inscription n'a pas encore commencé"
+          subTitle={`Les inscriptions débuteront le ${new Date(insStep.date_debut).toLocaleDateString()}.`}
+        />
+        {renderHomeLink()}
+      </div>
+    );
+  }
+
+  if (inscriptionStatus === 'ended') {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
+        {renderLogo()}
+        <Result
+          status="warning"
+          title="La période d'inscription est terminée"
+          subTitle="Désolé, les inscriptions sont closes pour le moment."
+        />
+        {renderHomeLink()}
+      </div>
+    );
+  }
+
+  if (inscriptionStatus === 'error') {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
+        {renderLogo()}
+        <Result
+          status="error"
+          title="Une erreur s'est produite"
+          subTitle="Nous n'avons pas pu récupérer les informations d'inscription. Veuillez réessayer plus tard."
+        />
+        {renderHomeLink()}
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        <div className='w-full flex justify-center'>
-          <Link href={"/"} >
-            <Image src={"/assets/logo.svg"} alt='comète' width={180} height={160} /> 
-          </Link> 
-        </div>
+        {renderLogo()}
         <div className="bg-white max-sm:bg-transparent max-sm:pt-2 shadow-lg rounded-lg p-8 space-y-6">
           <h2 className="text-2xl font-bold text-gray-900 text-center">{steps[currentStep].title}</h2>
           <Form
@@ -274,7 +363,7 @@ export const SignUpForm = () => {
             </div>
 
             <div className="mt-6">
-              <Link href={"/login"} >
+              <Link href="/login">
                 <button
                   className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
                   disabled={loading}
@@ -285,6 +374,7 @@ export const SignUpForm = () => {
             </div>
           </div>
         </div>
+        {renderHomeLink()}
       </div>
     </div>
   );

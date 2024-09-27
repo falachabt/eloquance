@@ -7,7 +7,7 @@ import { notchpay } from "../../../lib/notchpay";
 export async function inscription_pay(d = false){
   const paymentInitiated = await notchpay.payments.initializePayment({
     currency: "XAF",
-    amount: 2000,
+    amount: 20,
     phone: "657273753",
     reference: generateReadableId(),
     description: "Payment for testing the Notch Pay SDK",
