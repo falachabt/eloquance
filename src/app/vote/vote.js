@@ -103,22 +103,27 @@ async function enregistrerVote(email, idEtape, idCandidat, isPayant, montant = 5
   }
 }
 
-export async function verifierOtpEtEnregistrerVote(email, otp, idEtape, idCandidat, isPayant) {
+export async function verifierOtpEtEnregistrerVote(email, otp, idEtape, idCandidat, isPayant, montant) {
+
+  
   try {
     // Vérifier l'OTP
-    const { error: otpError } = await supabase.auth.verifyOtp({
-      email,
-      token: otp,
-      type: 'email',
-    });
 
-    if (otpError) {
-      console.error('Erreur lors de la vérification de l’OTP:', otpError.message);
-      throw otpError;
+    if(!isPayant){
+      const { error: otpError } = await supabase.auth.verifyOtp({
+        email,
+        token: otp,
+        type: 'email',
+      });
+  
+      if (otpError) {
+        console.error('Erreur lors de la vérification de l’OTP:', otpError.message);
+        throw otpError;
+      }
     }
 
     // Si l'OTP est valide, on enregistre le vote
-    return await enregistrerVote(email, idEtape, idCandidat, isPayant);
+    return await enregistrerVote(email, idEtape, idCandidat, isPayant, montant);
   } catch (error) {
     console.error("Erreur lors du processus de vote après OTP:", error.message);
     throw error;

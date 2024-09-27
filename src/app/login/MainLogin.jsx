@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
-import { message } from 'antd';
+import { message, Spin } from 'antd';
 import Link from 'next/link';
 
 export const LoginPage = () => {
@@ -14,64 +14,65 @@ export const LoginPage = () => {
   const [resetStep, setResetStep] = useState(0);
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const handleLogin = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
-      // Implement your login logic here
-      const {  error }  = await supabase.auth.signInWithPassword({ email, password })
-     if(error){
-        message.error("echece de la connexion")
-     }
-      // If login is successful, redirect to dashboard
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      message.success("Connexion réussie");
       router.push('/candidat');
     } catch (error) {
       console.error('Login failed:', error);
-      alert('Échec de la connexion. Veuillez réessayer.');
+      message.error(error.message || 'Échec de la connexion. Veuillez réessayer.');
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleResetPassword = async (e) => {
     e.preventDefault();
+    setLoading(true);
     try {
       if (resetStep === 0) {
-        // Send OTP
-        // Implement sendVerificationCode(email) here
-        console.log('Sending OTP to:', email);
+        const { error } = await supabase.auth.signInWithOtp({ email });
+        if (error) throw error;
+        message.success('Un code de vérification a été envoyé à votre adresse e-mail.');
         setResetStep(1);
-        alert('Un code de vérification a été envoyé à votre adresse e-mail.');
       } else if (resetStep === 1) {
-        // Verify OTP
-        // Implement checkOtp(email, otp) here
-        console.log('Verifying OTP:', otp);
+        const { error } = await supabase.auth.verifyOtp({ email, token: otp, type: 'email' });
+        if (error) throw error;
+        message.success('Code de vérification confirmé. Veuillez définir un nouveau mot de passe.');
         setResetStep(2);
-        alert('Code de vérification confirmé. Veuillez définir un nouveau mot de passe.');
       } else {
-        // Set new password
-        // Implement updateUserPassword(email, newPassword) here
-        console.log('Setting new password');
-        alert('Mot de passe mis à jour avec succès. Veuillez vous connecter.');
+        const { error } = await supabase.auth.updateUser({ password: newPassword });
+        if (error) throw error;
+        message.success('Mot de passe mis à jour avec succès. Veuillez vous connecter.');
         setIsResetMode(false);
         setResetStep(0);
       }
     } catch (error) {
       console.error('Reset password failed:', error);
-      alert('Une erreur s\'est produite. Veuillez réessayer.');
+      message.error(error.message || 'Une erreur s\'est produite. Veuillez réessayer.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8 p-4">
-      <div className=" p-4 sm:mx-auto sm:w-full sm:max-w-md">
+      <div className="p-4 sm:mx-auto sm:w-full sm:max-w-md">
         <Link href={"/"}>
-        <Image
-          src="/assets/logo.svg"
-          alt="Logo"
-          width={150}
-          height={24}
-          className="mx-auto"
+          <Image
+            src="/assets/logo.svg"
+            alt="Logo"
+            width={150}
+            height={24}
+            className="mx-auto"
           />
-          </Link> 
+        </Link> 
         <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
           {isResetMode ? 'Réinitialisation du mot de passe' : 'Connexion à votre compte'}
         </h2>
@@ -95,6 +96,7 @@ export const LoginPage = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -115,6 +117,7 @@ export const LoginPage = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    disabled={loading}
                   />
                 </div>
               </div>
@@ -134,10 +137,11 @@ export const LoginPage = () => {
                     value={otp}
                     onChange={(e) => setOtp(e.target.value)}
                     className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    disabled={loading}
                   />
                 </div>
               </div>
-            ) : ""}
+            ) : null}
 
             {isResetMode && resetStep === 2 ? (
               <div>
@@ -153,23 +157,27 @@ export const LoginPage = () => {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    disabled={loading}
                   />
                 </div>
               </div>
-            ) : ""}
+            ) : null}
 
             <div>
               <button
                 type="submit"
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                disabled={loading}
               >
-                {isResetMode
-                  ? resetStep === 0
-                    ? 'Envoyer le code de vérification'
-                    : resetStep === 1
-                    ? 'Vérifier le code'
-                    : 'Réinitialiser le mot de passe'
-                  : 'Se connecter'}
+                {loading ? <Spin /> : (
+                  isResetMode
+                    ? resetStep === 0
+                      ? 'Envoyer le code de vérification'
+                      : resetStep === 1
+                      ? 'Vérifier le code'
+                      : 'Réinitialiser le mot de passe'
+                    : 'Se connecter'
+                )}
               </button>
             </div>
           </form>
@@ -186,16 +194,25 @@ export const LoginPage = () => {
               </div>
             </div>
 
-            <div className="mt-6">
+            <div className="mt-6 flex flex-col gap-2">
               <button
                 onClick={() => {
                   setIsResetMode(!isResetMode);
                   setResetStep(0);
                 }}
                 className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                disabled={loading}
               >
                 {isResetMode ? 'Retour à la connexion' : 'Mot de passe oublié ?'}
               </button>
+              <Link href={"/signup"}>
+                <button
+                  className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                  disabled={loading}
+                >
+                  Inscription
+                </button>
+              </Link> 
             </div>
           </div>
         </div>

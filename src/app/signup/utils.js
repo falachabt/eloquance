@@ -86,17 +86,55 @@ export async function checkIfEmail(email) {
   };
   
   export const insertCandidatData = async (formData) => {
-    const { data, error } = await supabase
-      .from('candidats')
-      .insert([formData]);
+    try {
+      // First, check if a candidate with this email already exists
+      const { data: existingCandidate, error: fetchError } = await supabase
+        .from('candidats')
+        .select('id')
+        .eq('email', formData.email)
+        .single();
   
-    if (error) {
-      console.error("Error inserting candidat data:", error);
+      if (fetchError && fetchError.code !== 'PGRST116') {
+        // PGRST116 is the error code for "no rows returned"
+        console.error("Error checking for existing candidate:", fetchError);
+        throw fetchError;
+      }
+  
+      let result;
+  
+      if (existingCandidate) {
+        // If the candidate exists, update their data
+        const { data, error } = await supabase
+          .from('candidats')
+          .update(formData)
+          .eq('id', existingCandidate.id)
+          .select();
+  
+        if (error) {
+          console.error("Error updating candidat data:", error);
+          throw error;
+        }
+        result = data;
+      } else {
+        // If the candidate doesn't exist, insert a new record
+        const { data, error } = await supabase
+          .from('candidats')
+          .insert([formData])
+          .select();
+  
+        if (error) {
+          console.error("Error inserting candidat data:", error);
+          throw error;
+        }
+        result = data;
+      }
+  
+      return result;
+    } catch (error) {
+      console.error("Error in insertCandidatData:", error);
       throw error;
     }
-    return data;
   };
-
 
   export const pay_inscription = async (email) => {
     try {

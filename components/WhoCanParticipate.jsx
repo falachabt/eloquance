@@ -34,7 +34,7 @@ export const EligibilitySection = () => (
           <div>
             <h3 className="text-2xl font-semibold">Où se déroule le concours ?</h3>
             <p className="text-gray-300">
-              Le concours se tiendra au <strong>CENAJES de Dschang</strong>, un lieu historique de rassemblement pour des événements éducatifs et culturels.
+              Le concours se tiendra a <strong>Yaounde</strong>, un lieu historique de rassemblement pour des événements éducatifs et culturels.
             </p>
           </div>
         </div>

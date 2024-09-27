@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { VotePaymentUpdater }  from "@/src/app/vote/VoteUpdateComp"
+
 
 
 
@@ -15,8 +17,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
- 
-        children
+<>
+ <VotePaymentUpdater/> 
+{children}
+</>  
       
   );
 }

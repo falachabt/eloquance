@@ -12,7 +12,7 @@ export async function pay(){
     phone: "657273753",
     reference: generateReadableId(),
     description: "Payment for testing the Notch Pay SDK",
-    callback: "http://localhost:3000/reservations",
+    callback: "http://comete.ezadrive.com/reservations",
   });
 
 
@@ -36,7 +36,7 @@ export async function handlePayment(participants, emailInCookies) {
         phone: "657273753",
         reference: "ref." + (Math.floor(Math.random() * (2000 - 100 + 1)) + 100),
         description: "Payment for testing the Notch Pay SDK",
-        callback: "http://localhost:3000/reservations",
+        callback: "http://comete.ezadrive.com/reservations",
         metadata: {
           emailInCookies,
           start: new Date(),

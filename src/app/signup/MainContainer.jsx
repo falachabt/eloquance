@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from 'react';
-import { Form, Input, Button, Checkbox, message } from 'antd';
+import { Form, Input, Button, Checkbox, message, Spin } from 'antd';
 import { checkOtp, insertCandidatData, pay_inscription, sendVerificationCode, updateUserPassword } from "./utils";
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
@@ -15,6 +15,7 @@ export const SignUpForm = () => {
   const [formData, setFormData] = useState({});
   const router = useRouter();
   const [, setInsStep] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchIns();
@@ -28,13 +29,16 @@ export const SignUpForm = () => {
   };
 
   const onFinish = async () => {
+    setLoading(true);
     try {
       await pay_inscription(formData?.email);
       console.log('Paiement réussi!');
       router.push("/candidat");
     } catch (error) {
-      message.error("failed to initialize the payment");
+      message.error("Échec de l'initialisation du paiement");
       console.log("error", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -43,6 +47,7 @@ export const SignUpForm = () => {
   };
 
   const nextStep = async () => {
+    setLoading(true);
     try {
       await form.validateFields(steps[currentStep].fields);
       const updatedFormData = { ...formData, ...form.getFieldsValue() };
@@ -74,6 +79,9 @@ export const SignUpForm = () => {
       setCurrentStep(currentStep + 1);
     } catch (error) {
       console.log('Validation failed:', error);
+      message.error(error.message || "Une erreur s'est produite");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -115,7 +123,7 @@ export const SignUpForm = () => {
       ),
     },
     {
-      title: 'Confirmation d&apos;email',
+      title: "Confirmation d'email",
       fields: ['otp'],
       content: (
         <>
@@ -209,7 +217,6 @@ export const SignUpForm = () => {
       content: (
         <>
           <p className="mb-2">Veuillez effectuer le paiement de 2000 FCFA pour finaliser votre inscription.</p>
-          <Button onClick={onFinish} type="primary">Payer</Button>
         </>
       ),
     },
@@ -218,11 +225,11 @@ export const SignUpForm = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-      <div  className='w-full flex justify-center'>
-        <Link href={"/"} >
-         <Image src={"/assets/logo.svg"} alt='comète'  width={180} height={160} /> 
-        </Link> 
-      </div>
+        <div className='w-full flex justify-center'>
+          <Link href={"/"} >
+            <Image src={"/assets/logo.svg"} alt='comète' width={180} height={160} /> 
+          </Link> 
+        </div>
         <div className="bg-white max-sm:bg-transparent max-sm:pt-2 shadow-lg rounded-lg p-8 space-y-6">
           <h2 className="text-2xl font-bold text-gray-900 text-center">{steps[currentStep].title}</h2>
           <Form
@@ -237,13 +244,19 @@ export const SignUpForm = () => {
             {steps[currentStep].content}
             <div className="flex justify-between">
               {currentStep > 0 && (
-                <Button onClick={prevStep} className="text-primary-500 hover:text-primary-600">
+                <Button onClick={prevStep} disabled={loading} className="text-primary-500 hover:text-primary-600">
                   Précédent
                 </Button>
               )}
-              <Button type="primary" onClick={nextStep}>
-                {currentStep === steps.length - 1 ? 'Terminer' : 'Suivant'}
-              </Button>
+              {currentStep < steps.length - 1 ? (
+                <Button type="primary" onClick={nextStep} disabled={loading}>
+                  {loading ? <Spin /> : 'Suivant'}
+                </Button>
+              ) : (
+                <Button type="primary" onClick={onFinish} disabled={loading}>
+                  {loading ? <Spin /> : 'Payer'}
+                </Button>
+              )}
             </div>
           </Form>
 
@@ -254,19 +267,20 @@ export const SignUpForm = () => {
               </div>
               <div className="relative flex justify-center text-sm">
                 <span className="px-2 bg-white text-gray-500">
-                  { 'Déjà inscrit ?'}
+                  {'Déjà inscrit ?'}
                 </span>
               </div>
             </div>
 
             <div className="mt-6">
               <Link href={"/login"} >
-              <button
-                className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                <button
+                  className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                  disabled={loading}
                 >
-                { 'Se connecter ?'}
-              </button>
-                </Link> 
+                  {'Se connecter ?'}
+                </button>
+              </Link> 
             </div>
           </div>
         </div>

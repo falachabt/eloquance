@@ -1,13 +1,13 @@
 "use client"
 import React, { useEffect, useState } from 'react';
-import { Table, Select, message,  Card, Input, Tag, Row, Col, Typography, Statistic } from 'antd';
+import { Table, Select, message, Card, Input, Tag, Row, Col, Typography, Statistic } from 'antd';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from "@/lib/supabase";
 import { CheckCircleOutlined, CloseCircleOutlined, MinusCircleOutlined } from '@ant-design/icons';
 
 const { Option } = Select;
 const { Search } = Input;
-const {  Text } = Typography;
+const { Text } = Typography;
 
 const CandidatesManagement = () => {
   const [candidates, setCandidates] = useState([]);
@@ -15,6 +15,7 @@ const CandidatesManagement = () => {
   const [candidateSteps, setCandidateSteps] = useState([]);
   const [selectedStep, setSelectedStep] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [votes, setVotes] = useState([]);
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -22,8 +23,6 @@ const CandidatesManagement = () => {
     fetchCandidates();
     fetchSteps();
     fetchCandidateSteps();
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -31,8 +30,11 @@ const CandidatesManagement = () => {
     if (step) {
       setSelectedStep(parseInt(step));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams?.get("step")]);
+
+  useEffect(() => {
+    fetchVotes();
+  }, [selectedStep]);
 
   const fetchCandidates = async () => {
     const { data, error } = await supabase.from('candidats').select('*');
@@ -64,6 +66,22 @@ const CandidatesManagement = () => {
     setCandidateSteps(data);
   };
 
+  const fetchVotes = async () => {
+    const stepToFetch = selectedStep || getActiveStep()?.id;
+    if (!stepToFetch) return;
+
+    const { data, error } = await supabase
+      .from('votes')
+      .select('*')
+      .eq('etape_id', stepToFetch);
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+    setVotes(data);
+  };
+
   const handleStepChange = (value) => {
     setSelectedStep(value);
     router.push(`?step=${value}`, { scroll: false });
@@ -82,21 +100,18 @@ const CandidatesManagement = () => {
 
   const handleMoveCandidate = async (candidatId, stepId, statut) => {
     try {
-      // 1. Vérifie si le candidat a déjà un enregistrement pour cette étape
       const { data: existingEntry, error: fetchError } = await supabase
         .from('candidats_etapes')
         .select('*')
         .eq('candidat_id', candidatId)
         .eq('etape_id', stepId)
-        .single(); // Utilise .single() car il doit y avoir un seul résultat si l'entrée existe
+        .single();
   
       if (fetchError && fetchError.code !== 'PGRST116') {
-        // Gérer toute autre erreur (sauf celle de "non trouvé")
         throw fetchError;
       }
   
       if (existingEntry) {
-        // 2. Si une entrée existe, on la met à jour
         const { error } = await supabase
           .from('candidats_etapes')
           .update({ statut })
@@ -105,24 +120,19 @@ const CandidatesManagement = () => {
   
         if (error) throw error;
       } else {
-        // 3. Si aucune entrée n'existe, on en crée une nouvelle
-        const { data, error } = await supabase
+        const { error } = await supabase
           .from('candidats_etapes')
           .insert({ candidat_id: candidatId, etape_id: stepId, statut });
   
         if (error) throw error;
-        result = data;
       }
   
-      // 4. Mettre à jour l'état local
       setCandidateSteps(prev => {
         const existingIndex = prev.findIndex(cs => cs.candidat_id === candidatId && cs.etape_id === stepId);
         
         if (existingIndex !== -1) {
-          // Mise à jour locale si l'entrée existait déjà
           return prev.map((cs, index) => index === existingIndex ? { ...cs, statut } : cs);
         } else {
-          // Ajouter une nouvelle entrée locale si elle n'existait pas
           return [...prev, { candidat_id: candidatId, etape_id: stepId, statut }];
         }
       });
@@ -133,7 +143,13 @@ const CandidatesManagement = () => {
       message.error('Erreur lors de la mise à jour du statut du candidat.');
     }
   };
-  
+
+  const getVotesForCandidate = (candidateId) => {
+    const candidateVotes = votes.filter(vote => vote.candidat_id === candidateId);
+    const totalVotes = candidateVotes.length;
+    const validVotes = candidateVotes.filter(vote => vote.vote_ok).length;
+    return { totalVotes, validVotes };
+  };
 
   const filteredCandidates = candidates
     .filter(candidate => {
@@ -162,11 +178,38 @@ const CandidatesManagement = () => {
       title: 'Nom du Candidat',
       dataIndex: 'name',
       key: 'name',
+      sorter: (a, b) => a.name.localeCompare(b.name),
     },
     {
       title: 'Email du Candidat',
       dataIndex: 'email',
       key: 'email',
+    },
+    {
+      title: 'Total Votes',
+      key: 'totalVotes',
+      render: (_, record) => {
+        const { totalVotes } = getVotesForCandidate(record.id);
+        return totalVotes;
+      },
+      sorter: (a, b) => {
+        const { totalVotes: votesA } = getVotesForCandidate(a.id);
+        const { totalVotes: votesB } = getVotesForCandidate(b.id);
+        return votesA - votesB;
+      },
+    },
+    {
+      title: 'Valid Votes',
+      key: 'validVotes',
+      render: (_, record) => {
+        const { validVotes } = getVotesForCandidate(record.id);
+        return validVotes;
+      },
+      sorter: (a, b) => {
+        const { validVotes: votesA } = getVotesForCandidate(a.id);
+        const { validVotes: votesB } = getVotesForCandidate(b.id);
+        return votesA - votesB;
+      },
     },
     {
       title: 'Progression des Étapes',
@@ -217,95 +260,84 @@ const CandidatesManagement = () => {
         );
       },
     },
+  
   ];
 
   const getTotalCandidatesForStep = (stepId) => {
     const currentStep = steps.find(step => step.id === stepId);
     
-    // Si aucune étape actuelle n'est trouvée, retourne 0
     if (!currentStep) return 0;
     
-    // Si c'est la première étape, tous les candidats sont éligibles
     if (currentStep.ordre === 1) {
       return candidates.length;
     }
     
-    // Trouve l'étape précédente
     const previousStep = steps.find(step => step.ordre === currentStep.ordre - 1);
     
-    // Si pas d'étape précédente trouvée, retourne 0
     if (!previousStep) {
-      return 0; // Retourne 0 dans le cas où il n'y a pas d'étape précédente
+      return 0;
     }
     
-    // Filtre les candidats qui ont validé l'étape précédente
     return candidates.filter(candidate => 
       getCandidateStatus(candidate.id, previousStep.id) === 'validée'
     ).length;
   };
-  
-
-  
 
   return (
     <div style={{ minHeight: '100vh' }}>
-         
-         <Row gutter={[16, 16]} style={{ marginBottom: '20px' }}>
-  {steps.map(step => (
-    <Col
-      key={step.id}
-      xs={24} // Full width on extra small screens
-      sm={12} // Half width on small screens
-      md={8}  // One-third width on medium screens
-      lg={6}  // One-fourth width on large screens
-    >
-      <Card className={step.est_active ? 'bg-green-100' : ''}>
-        <Statistic
-          title={step.nom}
-          value={getCandidatesInPhase(step.id)}
-          suffix={`/ ${getTotalCandidatesForStep(step.id)}`} // Change ici
-        />
-      </Card>
-    </Col>
-  ))}
-</Row>
+      <Row gutter={[16, 16]} style={{ marginBottom: '20px' }}>
+        {steps.map(step => (
+          <Col
+            key={step.id}
+            xs={24}
+            sm={12}
+            md={8}
+            lg={6}
+          >
+            <Card className={step.est_active ? 'bg-green-100' : ''}>
+              <Statistic
+                title={step.nom}
+                value={getCandidatesInPhase(step.id)}
+                suffix={`/ ${getTotalCandidatesForStep(step.id)}`}
+              />
+            </Card>
+          </Col>
+        ))}
+      </Row>
 
+      <Row gutter={[16, 16]} align="middle" style={{ marginBottom: '20px' }}>
+        <Col xs={24} sm={12} style={{ marginBottom: '10px' }}>
+          <Text strong>Étape Sélectionnée : </Text>
+          <Select
+            style={{ width: '100%', maxWidth: 200, marginLeft: '10px' }}
+            placeholder="Filtrer par Étape"
+            value={selectedStep}
+            onChange={handleStepChange}
+          >
+            <Option value={null}>Toutes les Étapes</Option>
+            {steps.map((step) => (
+              <Option key={step.id} value={step.id}>
+                {step.nom}
+              </Option>
+            ))}
+          </Select>
+        </Col>
+        <Col xs={24} sm={12} style={{ textAlign: 'right' }}>
+          <Search
+            placeholder="Rechercher un candidat"
+            onSearch={value => setSearchTerm(value)}
+            style={{ width: '100%', maxWidth: 300 }}
+          />
+        </Col>
+      </Row>
 
-
-<Row gutter={[16, 16]} align="middle" style={{ marginBottom: '20px' }}>
-  <Col xs={24} sm={12} style={{ marginBottom: '10px' }}>
-    <Text strong>Étape Sélectionnée : </Text>
-    <Select
-      style={{ width: '100%', maxWidth: 200, marginLeft: '10px' }}
-      placeholder="Filtrer par Étape"
-      value={selectedStep}
-      onChange={handleStepChange}
-    >
-      <Option value={null}>Toutes les Étapes</Option>
-      {steps.map((step) => (
-        <Option key={step.id} value={step.id}>
-          {step.nom}
-        </Option>
-      ))}
-    </Select>
-  </Col>
-  <Col xs={24} sm={12} style={{ textAlign: 'right' }}>
-    <Search
-      placeholder="Rechercher un candidat"
-      onSearch={value => setSearchTerm(value)}
-      style={{ width: '100%', maxWidth: 300 }}
-    />
-  </Col>
-</Row>
-
-
-        <Table
-          dataSource={filteredCandidates}
-          columns={columns}
-          rowKey="id"
-          pagination={{ pageSize: 10, showSizeChanger: true, showQuickJumper: true }}
-          scroll={{ x: true }}
-        />
+      <Table
+        dataSource={filteredCandidates}
+        columns={columns}
+        rowKey="id"
+        pagination={{ pageSize: 10, showSizeChanger: true, showQuickJumper: true }}
+        scroll={{ x: true }}
+      />
     </div>
   );
 };

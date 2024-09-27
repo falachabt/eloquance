@@ -12,7 +12,7 @@ import {
 import { 
   UserOutlined, MailOutlined, HomeOutlined, BookOutlined,
   CheckCircleOutlined, ClockCircleOutlined, CloseCircleOutlined,
-  DollarOutlined, TrophyOutlined, LikeOutlined,LogoutOutlined, 
+  DollarOutlined, TrophyOutlined, LikeOutlined, LogoutOutlined, 
 } from '@ant-design/icons';
 
 const { Header, Content } = Layout;
@@ -24,7 +24,7 @@ async function updateAllCandidatePayments() {
     const { data: candidates, error } = await supabase
       .from('candidats')
       .select('id, trx_id')
-      .eq('payment_status', false)
+      .eq('payment_status', true)
       .not('trx_id', 'is', null);
 
     if (error) throw error;
@@ -33,23 +33,81 @@ async function updateAllCandidatePayments() {
       const paymentDetails = await notchpay.payments.verifyAndFetchPayment(candidate.trx_id);
       
       if (paymentDetails?.transaction?.status === "complete") {
+        // Update candidate payment status
         const { error: updateError } = await supabase
           .from('candidats')
           .update({ payment_status: true })
           .eq('id', candidate.id);
 
-        if (updateError) console.error(`Erreur lors de la mise à jour du candidat ${candidate.id}:`, updateError);
-        return { id: candidate.id, updated: !updateError };
+        if (updateError) {
+          console.error(`Erreur lors de la mise à jour du candidat ${candidate.id}:`, updateError);
+          return { id: candidate.id, updated: false };
+        }
+
+        // Get the registration stage (ordre = 0)
+        const { data: registrationStage, error: stageError } = await supabase
+          .from('etapes_concours')
+          .select('id')
+          .eq('ordre', 1)
+          .maybeSingle();
+
+
+        if (stageError) {
+          console.error(`Erreur lors de la récupération de l'étape d'inscription:`, stageError);
+          return { id: candidate.id, updated: true, stageUpdated: false };
+        }
+
+        // Update or insert the candidats_etapes entry
+        const { data: existingEntry, error: entryError } = await supabase
+          .from('candidats_etapes')
+          .select('id')
+          .eq('candidat_id', candidate.id)
+          .eq('etape_id', registrationStage.id)
+          .single();
+
+        if (entryError && entryError.code !== 'PGRST116') { // PGRST116 is the error code for "no rows returned"
+          console.error(`Erreur lors de la vérification de l'entrée existante:`, entryError);
+          return { id: candidate.id, updated: true, stageUpdated: false };
+        }
+
+        const updateData = {
+          candidat_id: candidate.id,
+          etape_id: registrationStage.id,
+          statut: 'validée',
+          date_fin: new Date().toISOString()
+        };
+
+        let stageUpdateError;
+        if (existingEntry) {
+          // Update existing entry
+          const { error: updateStageError } = await supabase
+            .from('candidats_etapes')
+            .update(updateData)
+            .eq('id', existingEntry.id);
+          stageUpdateError = updateStageError;
+        } else {
+          // Insert new entry
+          const { error: insertStageError } = await supabase
+            .from('candidats_etapes')
+            .insert(updateData);
+          stageUpdateError = insertStageError;
+        }
+
+        if (stageUpdateError) {
+          console.error(`Erreur lors de la mise à jour de l'étape du candidat ${candidate.id}:`, stageUpdateError);
+          return { id: candidate.id, updated: true, stageUpdated: false };
+        }
+
+        return { id: candidate.id, updated: true, stageUpdated: true };
       }
-      return { id: candidate.id, updated: false };
+      return { id: candidate.id, updated: false, stageUpdated: false };
     });
 
     const results = await Promise.all(updates);
-    console.log('Résultats de la mise à jour des paiements:', results);
 
     return results;
   } catch (error) {
-    console.error('Erreur lors de la mise à jour des paiements:', error);
+    console.error('Erreur lors de la mise à jour des paiements et des étapes:', error);
     throw error;
   }
 }
@@ -201,7 +259,6 @@ const CandidateDashboard = () => {
       console.error('Erreur lors de la déconnexion:', error);
     }
   };
-
 
   const renderProfileCard = () => (
     <Card id="profile">
@@ -378,12 +435,12 @@ const CandidateDashboard = () => {
 
   const renderMobileMenu = () => (
     <Anchor affix={false} className='flex ' onClick={e => e.preventDefault()}>
-<Flex>
-      <Link href="#profile" title="Profil" />
-      <Link href="#progress" title="Progression" />
-      <Link href="#timeline" title="Chronologie" />
-      <Link href="#votes" title="Votes" />
-  </Flex> 
+      <Flex>
+        <Link href="#profile" title="Profil" />
+        <Link href="#progress" title="Progression" />
+        <Link href="#timeline" title="Chronologie" />
+        <Link href="#votes" title="Votes" />
+      </Flex> 
     </Anchor>
   );
 

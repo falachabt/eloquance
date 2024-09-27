@@ -7,11 +7,11 @@ import { notchpay } from "../../../lib/notchpay";
 export async function inscription_pay(d = false){
   const paymentInitiated = await notchpay.payments.initializePayment({
     currency: "XAF",
-    amount: 20,
+    amount: 2000,
     phone: "657273753",
     reference: generateReadableId(),
     description: "Payment for testing the Notch Pay SDK",
-    callback: !d ? "http://localhost:3000/reservations" : "http://localhost:3000/candidat",
+    callback: !d ? "http://comete.ezadrive.com/reservations" : "http://comete.ezadrive.com/candidat",
   });
 
 

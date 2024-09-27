@@ -7,7 +7,7 @@ export const FeaturesSection = () => {
       <div className="max-w-7xl mx-auto text-center">
         <h2 className="text-4xl font-bold mb-4">Vous avez la parole !!!</h2>
         <p className="text-lg mb-12">
-          Rejoignez le mouvement dès aujourd&apos;hui ! Inscrivez-vous maintenant pour prouver que vous avez la parole, inspirez les autres et gagnez des récompenses prestigieuses
+          {`Rejoignez le mouvement dès aujourd'hui ! Inscrivez-vous maintenant pour prouver que vous avez la parole, inspirez les autres et gagnez des récompenses prestigieuses`}
         </p>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Inscription */}
@@ -22,7 +22,7 @@ export const FeaturesSection = () => {
             <h3 className="text-xl font-semibold mb-2">Étape 1: Inscription</h3>
             <ul className="space-y-2 text-left">
               <li>✅ Remplissage des informations personnelles</li>
-              <li>✅ Paiement des frais d&apos;inscription</li>
+              <li>✅ {`Paiement des frais d'inscription`}</li>
               <li>✅ Lien Instagram fourni pour participation</li>
             </ul>
           </div>
@@ -38,7 +38,7 @@ export const FeaturesSection = () => {
             </div>
             <h3 className="text-xl font-semibold mb-2">Étape 2: Préselection</h3>
             <ul className="space-y-2 text-left">
-              <li>✅ Vidéo de présentation postée sur Instagram</li>
+              <li>✅ Vidéo de présentation postée sur Facebook & Tiktok</li>
               <li>✅ Première élimination par les organisateurs</li>
             </ul>
           </div>

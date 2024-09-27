@@ -3,6 +3,9 @@ import Image from 'next/image';
 import Link from 'next/link'
 import React, { useState } from 'react'
 import { usePathname } from 'next/navigation'
+import { VotePaymentUpdater }  from "@/src/app/vote/VoteUpdateComp"
+
+
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -18,6 +21,7 @@ const Header = () => {
 
   return (
     <header className="sticky top-0 z-50 w-full">
+       <VotePaymentUpdater/> 
       <nav className="bg-white border-gray-200 px-4 lg:px-6 py-2.5 dark:bg-gray-800">
         <div className="flex flex-wrap justify-between items-center mx-auto max-w-screen-xl">
           <Link href="/" className="flex items-center">

@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabase";
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { creerOuRecupererUtilisateur_OTP, verifierOtpEtEnregistrerVote } from "./vote";
+import { VotePaymentUpdater } from "./VoteUpdateComp";
 
 // Fetch active step function
 const fetchActiveStep = async () => {
@@ -35,7 +36,8 @@ const fetchVotes = async (etapeId) => {
   const { data, error } = await supabase
     .from('votes')
     .select('candidat_id')
-    .eq('etape_id', etapeId);
+    .eq('etape_id', etapeId)
+    .eq("vote_ok", true)
   
   if (error) throw error;
 
@@ -64,16 +66,16 @@ const PageVotesEloquence = () => {
   const [etapeStatus, setEtapeStatus] = useState('loading');
   const [tempsRestant, setTempsRestant] = useState(0);
   const [votes, setVotes] = useState([]);
-  const [, setTotalVotes] = useState(0);
+  const [totalVotes, setTotalVotes] = useState(0);
 
   const { data: activeStep, error: activeStepError } = useSWR('etapes_concours_active', fetchActiveStep, {
-    refreshInterval: 0,
+    refreshInterval: 10000, // Refresh every 10 seconds
     revalidateOnFocus: true,
     dedupingInterval: 2000,
   });
 
   const { data: candidats, error: candidatsError } = useSWR('candidats', fetchCandidats, {
-    refreshInterval: 0,
+    refreshInterval: 10000, // Refresh every 10 seconds
     revalidateOnFocus: true,
     dedupingInterval: 2000,
   });
@@ -107,7 +109,6 @@ const PageVotesEloquence = () => {
         subscription.unsubscribe();
       };
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeStep]);
 
   useEffect(() => {
@@ -151,6 +152,7 @@ const PageVotesEloquence = () => {
     const { votes, totalVotes } = await fetchVotes(etapeId);
     setVotes(votes);
     setTotalVotes(totalVotes);
+    mutate('votes'); // Trigger a re-render of components using the 'votes' key
   };
 
   const formatTemps = (temps) => {
@@ -203,14 +205,24 @@ const PageVotesEloquence = () => {
   };
 
   const envoyerEmail = async () => {
-    await creerOuRecupererUtilisateur_OTP(email);
-    setEtapeVote(2);
+    if(activeStep?.votes_payants){
+      await verifierOtpEtEnregistrerVote(email, code, activeStep?.id, candidatSelectionne?.id, activeStep?.votes_payants, activeStep?.montant_paiement); 
+      setEtapeVote(0);
+      setEmail('');
+      setCode('');
+      setCandidatSelectionne(null);
+      message.success("Terminez avec le paiement pour que le vote soit valide")
+    } else {
+      await creerOuRecupererUtilisateur_OTP(email);
+      setEtapeVote(2)
+    }
   };
 
   const confirmerVote = async () => {
     try {
       await verifierOtpEtEnregistrerVote(email, code, activeStep?.id, candidatSelectionne?.id, activeStep?.votes_payants, activeStep?.montant_paiement);
       message.success(`Vote confirmé pour ${candidatSelectionne.name}`);
+      refreshVotes(activeStep?.id); // Refresh votes after confirming
     } catch (error) {
       message.error(error.message);
     }
@@ -226,6 +238,7 @@ const PageVotesEloquence = () => {
 
   return (
     <div className='h-full flex flex-col'>
+       <VotePaymentUpdater /> 
       <Header />
       <div className="flex-1 bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
         <div className="max-w-6xl mx-auto">
@@ -287,7 +300,7 @@ const PageVotesEloquence = () => {
             <p>Entrez votre email pour voter pour <strong>{candidatSelectionne?.name}</strong></p>
             <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Votre email" />
             <Button type="primary" className="mt-4 w-full" onClick={envoyerEmail}>
-              Envoyer OTP
+               { activeStep?.votes_payants ? "Payer le vote  " + activeStep?.montant_paiement + "FCFA" :   "Envoyer OTP"}
             </Button>
           </>
         )}

@@ -7,7 +7,7 @@ export async function vote_pay( amount){
       phone: "657273753",
       reference: generateReadableId(),
       description: "Payment to vote for comete",
-      callback:  "http://localhost:3000/vote" ,
+      callback:  "http://comete.ezadrive.com/vote" ,
     });
 
     
