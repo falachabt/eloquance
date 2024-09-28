@@ -31,9 +31,7 @@ async function sendOtp(email) {
     try {
       await checkIfEmail(email, password);
     } catch (error) {
-      if (error.message?.includes("A user with this email address has already")) {
-        await sendOtp(email);
-      }
+      throw error
     }
   }
 
@@ -46,7 +44,7 @@ export async function checkIfEmail(email, password) {
         const { data: candidate } = await supabseAdmin.from("candidats").select("*").eq("email", email).maybeSingle();
 
         if (candidate) {
-            throw "Already a candidate";
+            throw new Error("un candidat inscrit à cette adresse, connectez vous à la place");
         }
 
         
