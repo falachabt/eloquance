@@ -40,7 +40,7 @@ export const UserReservations = () => {
   const { data: reservations, error, mutate } = useSWR('userReservations', fetcher);
 
   useEffect(() => {
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
         mutate();
       }
