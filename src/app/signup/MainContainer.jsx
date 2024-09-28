@@ -294,9 +294,10 @@ export const SignUpForm = () => {
     );
   }
 
+  
   return (
     <div className="min-h-screen flex flex-col bg-gray-100">
-      <div className="flex-grow flex flex-col py-4 px-4 sm:px-6 lg:px-8 overflow-y-auto">
+      <div className="flex-grow flex flex-col py-4 px-4 sm:px-6 lg:px-8 ">
         <div className="w-full max-w-md mx-auto">
           {renderLogo()}
           <div className="bg-white shadow-lg rounded-lg p-6 space-y-6">
