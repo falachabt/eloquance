@@ -1,9 +1,9 @@
 "use client";
 
+import React, { useEffect } from 'react';
 import { Table, Typography, Spin, Alert, Tag, Button, message } from 'antd';
 import useSWR from 'swr';
 import { supabase } from '@/lib/supabase';
-import Cookies from "js-cookie";
 import { notchpay } from '@/lib/notchpay';
 import { RedoOutlined } from '@ant-design/icons';
 import { pay } from "./payment.utils";
@@ -11,11 +11,15 @@ import { pay } from "./payment.utils";
 const { Title } = Typography;
 
 const fetcher = async () => {
-  const emailInCookies = Cookies.get("user_email");
+  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  
+  if (authError) throw authError;
+  if (!user) throw new Error("User not authenticated");
+
   const { data, error } = await supabase
     .from('reservations')
     .select('*')
-    .eq('email', emailInCookies);
+    .eq('email', user.email);
 
   if (error) throw error;
 
@@ -35,9 +39,21 @@ const fetcher = async () => {
 export const UserReservations = () => {
   const { data: reservations, error, mutate } = useSWR('userReservations', fetcher);
 
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+        mutate();
+      }
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
+    };
+  }, [mutate]);
+
   async function handleRedoPayment(id) {
     try {
-      const { url , trx_id} = await pay();
+      const { url, trx_id } = await pay();
       if (!trx_id) throw 'Failed to initialize the payment';
 
       const { error } = await supabase.from("reservations").update({ trx_id }).eq("id", id);
@@ -97,14 +113,17 @@ export const UserReservations = () => {
   ];
 
   return (
-    <div style={{ padding: '20px' }}>
+    <div style={{ padding: '20px', maxWidth: '100%', overflowX: 'hidden' }}>
       <Title level={3}>Vos Reservations</Title>
-      <Table
-        columns={columns}
-        dataSource={reservations}
-        rowKey="id"
-        pagination={{ pageSize: 10 }}
-      />
+      <div style={{ width: '100%', overflowX: 'auto' }}>
+        <Table
+          columns={columns}
+          dataSource={reservations}
+          rowKey="id"
+          pagination={{ pageSize: 10 }}
+          scroll={{ x: 'max-content' }}
+        />
+      </div>
     </div>
   );
 };
