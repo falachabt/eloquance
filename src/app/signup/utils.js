@@ -17,16 +17,6 @@ export async function checkOtp(email, otp){
 }
 
 
-
-async function sendOtp(email) {
-    try {
-      await supabase.auth.signInWithOtp({ email });
-      message.success("Code d'activation envoyé à votre email.");
-    } catch (error) {
-      message.error(error.message || "Erreur lors de l'envoi du code d'activation.");
-    }
-  }
-
   export async function sendVerificationCode(email, password) {
     try {
       await checkIfEmail(email, password);
