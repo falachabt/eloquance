@@ -79,9 +79,6 @@ export const SignUpForm = () => {
       const updatedFormData = { ...formData, ...form.getFieldsValue() };
       setFormData(updatedFormData);
 
-
-    
-
       if (currentStep === 2) {
         await sendVerificationCode(updatedFormData?.email, updatedFormData?.password);
         await signInUser(updatedFormData?.email, updatedFormData?.password);
@@ -145,7 +142,6 @@ export const SignUpForm = () => {
         </>
       ),
     },
-  
     {
       title: 'Coordonnées et motivation',
       fields: ['motivation', 'phone', 'city'],
@@ -299,11 +295,11 @@ export const SignUpForm = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col justify-between bg-gray-100">
-      <div className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-        <div className="w-full max-w-md space-y-8">
+    <div className="min-h-screen flex flex-col bg-gray-100">
+      <div className="flex-grow flex flex-col py-4 px-4 sm:px-6 lg:px-8 overflow-y-auto">
+        <div className="w-full max-w-md mx-auto">
           {renderLogo()}
-          <div className="bg-white max-sm:bg-transparent max-sm:pt-2 shadow-lg rounded-lg p-8 space-y-6">
+          <div className="bg-white shadow-lg rounded-lg p-6 space-y-6">
             <h2 className="text-2xl font-bold text-gray-900 text-center">{steps[currentStep].title}</h2>
             <Form
               form={form}
@@ -314,7 +310,7 @@ export const SignUpForm = () => {
               autoComplete="off"
               className="space-y-4"
             >
-              <div className="max-h-[60vh] overflow-y-auto pb-4">
+              <div className="space-y-4">
                 {steps[currentStep].content}
               </div>
               <div className="flex justify-between pt-4">
