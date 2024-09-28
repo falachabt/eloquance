@@ -21,14 +21,45 @@ const fetchActiveStep = async () => {
   return data;
 };
 
-// Fetch all candidats
-const fetchCandidats = async () => {
-  const { data, error } = await supabase
+// Fetch all candidats with their validated steps up to but not including the active step
+const fetchCandidats = async (activeStepId) => {
+  // First, get all steps before the active step
+  const { data: steps, error: stepsError } = await supabase
+    .from('etapes_concours')
+    .select('id')
+    .lt('id', activeStepId)  // Changed from lte to lt
+    .order('id', { ascending: true });
+
+  if (stepsError) throw stepsError;
+
+  if (steps.length === 0) {
+    // If there are no previous steps, return an empty array
+    return [];
+  }
+
+  const stepIds = steps.map(step => step.id);
+
+  // Then, get all candidates who have validated all these steps
+  const { data: validCandidates, error: candidatesError } = await supabase
     .from('candidats')
-    .select('*');
-  
-  if (error) throw error;
-  return data;
+    .select(`
+      *,
+      candidats_etapes!inner(*)
+    `)
+    .in('candidats_etapes.etape_id', stepIds)
+    .eq('candidats_etapes.statut', 'validée')
+    .order('id');
+
+  if (candidatesError) throw candidatesError;
+
+  // Filter candidates who have validated all previous steps
+  const fullyValidatedCandidates = validCandidates.filter(candidate => 
+    stepIds.every(stepId => 
+      candidate.candidats_etapes.some(ce => ce.etape_id === stepId && ce.statut === 'validée')
+    )
+  );
+
+  return fullyValidatedCandidates;
 };
 
 // Fetch and process votes
@@ -68,16 +99,20 @@ const PageVotesEloquence = () => {
   const [votes, setVotes] = useState([]);
 
   const { data: activeStep, error: activeStepError } = useSWR('etapes_concours_active', fetchActiveStep, {
-    refreshInterval: 10000, // Refresh every 10 seconds
+    refreshInterval: 10000,
     revalidateOnFocus: true,
     dedupingInterval: 2000,
   });
 
-  const { data: candidats, error: candidatsError } = useSWR('candidats', fetchCandidats, {
-    refreshInterval: 10000, // Refresh every 10 seconds
-    revalidateOnFocus: true,
-    dedupingInterval: 2000,
-  });
+  const { data: candidats, error: candidatsError } = useSWR(
+    activeStep ? ['candidats', activeStep.id] : null,
+    () => fetchCandidats(activeStep.id),
+    {
+      refreshInterval: 10000,
+      revalidateOnFocus: true,
+      dedupingInterval: 2000,
+    }
+  );
 
   useEffect(() => {
     const etapesSubscription = supabase
@@ -89,8 +124,10 @@ const PageVotesEloquence = () => {
 
     const candidatsSubscription = supabase
       .channel('candidats_changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'candidats' }, () => {
-        mutate('candidats');
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'candidats_etapes' }, () => {
+        if (activeStep) {
+          mutate(['candidats', activeStep.id]);
+        }
       })
       .subscribe();
 
@@ -98,8 +135,7 @@ const PageVotesEloquence = () => {
       supabase.removeChannel(etapesSubscription);
       supabase.removeChannel(candidatsSubscription);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [activeStep]);
 
   useEffect(() => {
     if (activeStep) {
@@ -109,7 +145,6 @@ const PageVotesEloquence = () => {
         subscription.unsubscribe();
       };
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeStep]);
 
   useEffect(() => {
@@ -117,7 +152,6 @@ const PageVotesEloquence = () => {
       setTempsRestant((prevTemps) => (prevTemps > 0 ? prevTemps - 1 : 0));
     }, 1000);
     return () => clearInterval(timer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const updateEtapeStatus = (etape) => {
@@ -153,7 +187,7 @@ const PageVotesEloquence = () => {
   const refreshVotes = async (etapeId) => {
     const { votes } = await fetchVotes(etapeId);
     setVotes(votes);
-    mutate('votes'); // Trigger a re-render of components using the 'votes' key
+    mutate('votes');
   };
 
   const formatTemps = (temps) => {
@@ -223,7 +257,7 @@ const PageVotesEloquence = () => {
     try {
       await verifierOtpEtEnregistrerVote(email, code, activeStep?.id, candidatSelectionne?.id, activeStep?.votes_payants, activeStep?.montant_paiement);
       message.success(`Vote confirmé pour ${candidatSelectionne.name}`);
-      refreshVotes(activeStep?.id); // Refresh votes after confirming
+      refreshVotes(activeStep?.id);
     } catch (error) {
       message.error(error.message);
     }

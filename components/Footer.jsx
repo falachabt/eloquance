@@ -36,7 +36,7 @@ export const Footer = () => {
           </div>
         </div>
         <div className="mt-2 text-xs text-gray-500 text-center">
-          Téléphones: 694650142 / 651055663 / 695051893 / 658959491
+          Téléphones: 694650142 / 651055663 / 694051893 / 658959491
         </div>
       </div>
     </footer>

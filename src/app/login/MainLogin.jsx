@@ -1,5 +1,5 @@
 "use client"
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
@@ -16,14 +16,29 @@ export const LoginPage = () => {
   const [newPassword, setNewPassword] = useState('');
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        await supabase.auth.signOut();
+      }
+    };
+    checkSession();
+  }, []);
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      await supabase.auth.signOut();
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
-      message.success("Connexion réussie");
-      router.push('/candidat');
+      if (data.user) {
+        message.success("Connexion réussie");
+        router.replace('/candidat');
+      } else {
+        throw new Error("Aucun utilisateur retourné après la connexion");
+      }
     } catch (error) {
       console.error('Login failed:', error);
       message.error(error.message || 'Échec de la connexion. Veuillez réessayer.');

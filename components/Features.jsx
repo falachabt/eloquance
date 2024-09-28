@@ -23,7 +23,6 @@ export const FeaturesSection = () => {
             <ul className="space-y-2 text-left">
               <li>✅ Remplissage des informations personnelles</li>
               <li>✅ {`Paiement des frais d'inscription`}</li>
-              <li>✅ Lien Instagram fourni pour participation</li>
             </ul>
           </div>
 

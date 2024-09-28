@@ -1,7 +1,7 @@
 "use client"
 import React, { useEffect, useState } from 'react';
 import { Form, Input, Button, Checkbox, message, Spin, Result } from 'antd';
-import { checkOtp, insertCandidatData, pay_inscription, sendVerificationCode, updateUserPassword } from "./utils";
+import { checkOtp, insertCandidatData, pay_inscription, sendVerificationCode, signInUser, updateUserPassword } from "./utils";
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import Image from 'next/image';
@@ -79,16 +79,13 @@ export const SignUpForm = () => {
       const updatedFormData = { ...formData, ...form.getFieldsValue() };
       setFormData(updatedFormData);
 
-      if (currentStep === 0) {
-        await sendVerificationCode(updatedFormData?.email);
-      }
 
-      if (currentStep === 1) {
-        await checkOtp(updatedFormData?.email, updatedFormData?.otp);
-      }
+    
 
-      if (currentStep === 3) {
-        await updateUserPassword(updatedFormData?.email, updatedFormData?.password);
+      if (currentStep === 2) {
+        await sendVerificationCode(updatedFormData?.email, updatedFormData?.password);
+        await signInUser(updatedFormData?.email, updatedFormData?.password);
+        
         const candidatData = {
           name: updatedFormData?.name,
           email: updatedFormData?.email,
@@ -148,22 +145,7 @@ export const SignUpForm = () => {
         </>
       ),
     },
-    {
-      title: "Confirmation d'email",
-      fields: ['otp'],
-      content: (
-        <>
-          <p className="mb-2">Un code de confirmation a été envoyé à votre adresse email.</p>
-          <Form.Item
-            name="otp"
-            label="Code de confirmation"
-            rules={[{ required: true, message: 'Veuillez entrer le code de confirmation' }]}
-          >
-            <Input className="bg-gray-50 border border-gray-300 text-gray-900 sm:text-sm rounded-lg focus:ring-primary-600 focus:border-primary-600 block w-full p-2.5" />
-          </Form.Item>
-        </>
-      ),
-    },
+  
     {
       title: 'Coordonnées et motivation',
       fields: ['motivation', 'phone', 'city'],

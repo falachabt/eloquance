@@ -26,10 +26,9 @@ async function sendOtp(email) {
     }
   }
 
-  export async function sendVerificationCode(email) {
+  export async function sendVerificationCode(email, password) {
     try {
-      await checkIfEmail(email);
-      await sendOtp(email);
+      await checkIfEmail(email, password);
     } catch (error) {
       if (error.message?.includes("A user with this email address has already")) {
         await sendOtp(email);
@@ -39,7 +38,7 @@ async function sendOtp(email) {
 
 
 
-export async function checkIfEmail(email) {
+export async function checkIfEmail(email, password) {
     try {
 
         // check if the user is alearidy a candidate
@@ -52,6 +51,7 @@ export async function checkIfEmail(email) {
         
       const {  error: createUserError } = await supabseAdmin.auth.admin.createUser({
         email: email,
+        password : password,
         email_confirm: true,
       });
   
@@ -66,10 +66,24 @@ export async function checkIfEmail(email) {
     
   
     } catch (err) {
+      throw err
       console.error("Unexpected error:", err);
     }
   }
 
+
+  export const signInUser = async (email, password) => {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
+  
+    if (error) {
+      console.error("Error updating password:", error);
+      throw error;
+    }
+    return data;
+  };
 
 
   export const updateUserPassword = async (email, password) => {
