@@ -299,63 +299,69 @@ export const SignUpForm = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8">
-        {renderLogo()}
-        <div className="bg-white max-sm:bg-transparent max-sm:pt-2 shadow-lg rounded-lg p-8 space-y-6">
-          <h2 className="text-2xl font-bold text-gray-900 text-center">{steps[currentStep].title}</h2>
-          <Form
-            form={form}
-            name="signup-form"
-            layout="vertical"
-            initialValues={{ remember: true }}
-            onFinishFailed={onFinishFailed}
-            autoComplete="off"
-            className="space-y-4"
-          >
-            {steps[currentStep].content}
-            <div className="flex justify-between">
-              {currentStep > 0 && (
-                <Button onClick={prevStep} disabled={loading} className="text-primary-500 hover:text-primary-600">
-                  Précédent
-                </Button>
-              )}
-              {currentStep < steps.length - 1 ? (
-                <Button type="primary" onClick={nextStep} disabled={loading}>
-                  {loading ? <Spin /> : 'Suivant'}
-                </Button>
-              ) : (
-                <Button type="primary" onClick={onFinish} disabled={loading}>
-                  {loading ? <Spin /> : 'Payer'}
-                </Button>
-              )}
-            </div>
-          </Form>
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
+    <div className="min-h-screen flex flex-col justify-between bg-gray-100">
+      <div className="flex-grow flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+        <div className="w-full max-w-md space-y-8">
+          {renderLogo()}
+          <div className="bg-white max-sm:bg-transparent max-sm:pt-2 shadow-lg rounded-lg p-8 space-y-6">
+            <h2 className="text-2xl font-bold text-gray-900 text-center">{steps[currentStep].title}</h2>
+            <Form
+              form={form}
+              name="signup-form"
+              layout="vertical"
+              initialValues={{ remember: true }}
+              onFinishFailed={onFinishFailed}
+              autoComplete="off"
+              className="space-y-4"
+            >
+              <div className="max-h-[60vh] overflow-y-auto pb-4">
+                {steps[currentStep].content}
               </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">
-                  {'Déjà inscrit ?'}
-                </span>
+              <div className="flex justify-between pt-4">
+                {currentStep > 0 && (
+                  <Button onClick={prevStep} disabled={loading} className="text-primary-500 hover:text-primary-600">
+                    Précédent
+                  </Button>
+                )}
+                {currentStep < steps.length - 1 ? (
+                  <Button type="primary" onClick={nextStep} disabled={loading}>
+                    {loading ? <Spin /> : 'Suivant'}
+                  </Button>
+                ) : (
+                  <Button type="primary" onClick={onFinish} disabled={loading}>
+                    {loading ? <Spin /> : 'Payer'}
+                  </Button>
+                )}
               </div>
-            </div>
+            </Form>
 
             <div className="mt-6">
-              <Link href="/login">
-                <button
-                  className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
-                  disabled={loading}
-                >
-                  {'Se connecter ?'}
-                </button>
-              </Link> 
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-gray-300" />
+                </div>
+                <div className="relative flex justify-center text-sm">
+                  <span className="px-2 bg-white text-gray-500">
+                    {'Déjà inscrit ?'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <Link href="/login">
+                  <button
+                    className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50"
+                    disabled={loading}
+                  >
+                    {'Se connecter ?'}
+                  </button>
+                </Link> 
+              </div>
             </div>
           </div>
         </div>
+      </div>
+      <div className="py-4">
         {renderHomeLink()}
       </div>
     </div>
