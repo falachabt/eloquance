@@ -37,36 +37,69 @@ async function sendOtp(email) {
 
 
 
-export async function checkIfEmail(email, password) {
+  export async function checkIfEmail(email, password) {
     try {
-
-        // check if the user is alearidy a candidate
-        const { data: candidate } = await supabseAdmin.from("candidats").select("*").eq("email", email).maybeSingle();
-
-        if (candidate) {
-            throw new Error("un candidat inscrit à cette adresse, connectez vous à la place");
-        }
-
-        
-      const {  error: createUserError } = await supabseAdmin.auth.admin.createUser({
-        email: email,
-        password : password,
-        email_confirm: true,
-      });
+      // Check if the user is already a candidate
+      const { data: candidate } = await supabseAdmin.from("candidats").select("*").eq("email", email).maybeSingle();
   
-
-
-      if (createUserError) {
-        console.error("Error creating user:", createUserError);
-      throw createUserError;
-        return;
+      if (candidate) {
+        throw new Error("Un candidat est déjà inscrit à cette adresse, connectez-vous à la place");
       }
   
-    
+      // Try to create a new user
+      const { data: newUser, error: createUserError } = await supabseAdmin.auth.admin.createUser({
+        email: email,
+        password: password,
+        email_confirm: true,
+      });
+
+      if (createUserError) {
+        
+     
+        // If the error is because the user already exists
+        if (createUserError.message.includes("A user with this email address has already")) {
+          // List users and find the one with matching email
+          const { data, error: listUsersError } = await supabseAdmin
+            .auth.admin.listUsers();
+  
+            const users = data.users
+
+            
+          if (listUsersError) {
+            console.error("Error listing users:", listUsersError);
+            throw listUsersError;
+          }
+  
+          const existingUser = users.find(user => user.email === email);
+  
+          if (!existingUser) {
+            throw new Error("User found in auth but not in user list");
+          }
+  
+          // Update the existing user's password
+          const { error: updateUserError } = await supabseAdmin
+            .auth.admin.updateUserById(existingUser.id, { password: password });
+  
+          if (updateUserError) {
+            console.error("Error updating user password:", updateUserError);
+            throw updateUserError;
+          }
+  
+          console.log("Existing user's password updated successfully");
+          return existingUser;
+        } else {
+          // If it's a different error, throw it
+          console.error("Error creating user:", createUserError);
+          throw createUserError;
+        }
+      }
+  
+      console.log("New user created successfully");
+      return newUser;
   
     } catch (err) {
-      throw err
       console.error("Unexpected error:", err);
+      throw err;
     }
   }
 
