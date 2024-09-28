@@ -7,7 +7,7 @@ import { supabase } from "@/lib/supabase";
 import { notchpay } from "@/lib/notchpay";
 import { 
   Layout, Menu, Card, Avatar, Statistic, Progress, 
-  Timeline, Table, Tag, Spin, Alert, Row, Col, Typography, Anchor, Flex
+  Timeline, Table, Tag, Spin, Alert, Row, Col, Typography, Anchor, Flex, Button
 } from 'antd';
 import { 
   UserOutlined, MailOutlined, HomeOutlined, BookOutlined,
@@ -51,7 +51,6 @@ async function updateAllCandidatePayments() {
           .eq('ordre', 1)
           .maybeSingle();
 
-
         if (stageError) {
           console.error(`Erreur lors de la récupération de l'étape d'inscription:`, stageError);
           return { id: candidate.id, updated: true, stageUpdated: false };
@@ -65,7 +64,7 @@ async function updateAllCandidatePayments() {
           .eq('etape_id', registrationStage.id)
           .single();
 
-        if (entryError && entryError.code !== 'PGRST116') { // PGRST116 is the error code for "no rows returned"
+        if (entryError && entryError.code !== 'PGRST116') {
           console.error(`Erreur lors de la vérification de l'entrée existante:`, entryError);
           return { id: candidate.id, updated: true, stageUpdated: false };
         }
@@ -160,9 +159,27 @@ const fetcher = async (url) => {
   }
 };
 
+async function inscription_pay(d = false) {
+  const paymentInitiated = await notchpay.payments.initializePayment({
+    currency: "XAF",
+    amount: 2000,
+    phone: "657273753",
+    reference: generateReadableId(),
+    description: "Payment of the inscription for la comète site",
+    callback: !d ? "http://comete.ezadrive.com/reservations" : "http://comete.ezadrive.com/candidat",
+  });
+
+  return { url: paymentInitiated.authorization_url, trx_id: paymentInitiated.transaction.reference };
+}
+
+function generateReadableId() {
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+}
+
 const CandidateDashboard = () => {
   const router = useRouter();
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth <= 768 : false);
+  const [isPaymentProcessing, setIsPaymentProcessing] = useState(false);
 
   const { data: candidateData, error: candidateError, mutate: mutateCandidate, isValidating: isValidatingCandidate } = useSWR('candidateData', fetcher);
   const { data: concoursEtapes, error: etapesError,  isValidating: isValidatingEtapes } = useSWR('concoursEtapes', fetcher);
@@ -263,6 +280,32 @@ const CandidateDashboard = () => {
     }
   };
 
+  const handlePayAgain = async () => {
+    setIsPaymentProcessing(true);
+    try {
+      const { url, trx_id } = await inscription_pay(true);
+      
+      // Update the trx_id for the current user
+      const { error } = await supabase
+        .from('candidats')
+        .update({ trx_id: trx_id })
+        .eq('email', email);
+
+      if (error) throw error;
+
+      // Open the payment URL in a new window
+      window.open(url, '_blank');
+
+      // Refresh the candidate data
+      mutateCandidate();
+    } catch (error) {
+      console.error('Erreur lors de l\'initialisation du paiement:', error);
+      alert('Une erreur est survenue lors de l\'initialisation du paiement. Veuillez réessayer.');
+    } finally {
+      setIsPaymentProcessing(false);
+    }
+  };
+
   const renderProfileCard = () => (
     <Card id="profile">
       <Row gutter={16} align="middle">
@@ -283,6 +326,15 @@ const CandidateDashboard = () => {
           <Tag color={payment_status ? 'green' : 'red'}>
             {payment_status ? 'Paiement validé' : 'Paiement en attente'}
           </Tag>
+          {!payment_status && (
+            <Button 
+              onClick={handlePayAgain} 
+              loading={isPaymentProcessing}
+              style={{ marginTop: '10px' }}
+            >
+              Payer à nouveau
+            </Button>
+          )}
         </Col>
       </Row>
     </Card>
