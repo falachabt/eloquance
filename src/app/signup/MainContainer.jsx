@@ -1,7 +1,7 @@
 "use client"
 import React, { useEffect, useState } from 'react';
 import { Form, Input, Button, Checkbox, message, Spin, Result } from 'antd';
-import { checkOtp, insertCandidatData, pay_inscription, sendVerificationCode, signInUser, updateUserPassword } from "./utils";
+import { insertCandidatData, pay_inscription, sendVerificationCode, signInUser } from "./utils";
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import Image from 'next/image';
