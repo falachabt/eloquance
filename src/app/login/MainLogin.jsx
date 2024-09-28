@@ -77,8 +77,8 @@ export const LoginPage = () => {
   };
 
   return (
-    <div className="h-screen  bg-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8 p-4">
-      <div className="p-4 sm:mx-auto sm:w-full sm:max-w-md">
+    <div className="min-h-screen bg-gray-100 flex flex-col sm:justify-center py-6 sm:py-12 px-4 sm:px-6 lg:px-8">
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
         <Link href={"/"}>
           <Image
             src="/assets/logo.svg"
