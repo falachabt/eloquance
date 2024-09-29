@@ -189,6 +189,11 @@ const CandidatesManagement = () => {
       key: 'email',
     },
     {
+      title: 'Telephone',
+      dataIndex: 'phone',
+      key: 'phone',
+    },
+    {
       title: 'Total Votes',
       key: 'totalVotes',
       render: (_, record) => {
