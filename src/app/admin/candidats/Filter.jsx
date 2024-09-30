@@ -194,6 +194,15 @@ const CandidatesManagement = () => {
       key: 'phone',
     },
     {
+      title: 'Inscript Date',
+      dataIndex: 'created_at',
+      key: 'created_at',
+      render : (_,record) => {
+        const date = new Date(record.created_at);
+        return date.toLocaleString('fr-FR');
+      }
+    },
+    {
       title: 'Total Votes',
       key: 'totalVotes',
       render: (_, record) => {
