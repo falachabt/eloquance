@@ -1,9 +1,10 @@
 "use client"
 import React, { useEffect, useState } from 'react';
-import { Table, Select, message, Card, Input, Tag, Row, Col, Typography, Statistic } from 'antd';
+import { Table, Select, message, Card, Input, Tag, Row, Col, Typography, Statistic, Button } from 'antd';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from "@/lib/supabase";
-import { CheckCircleOutlined, CloseCircleOutlined, MinusCircleOutlined } from '@ant-design/icons';
+import { CheckCircleOutlined, CloseCircleOutlined, MinusCircleOutlined, DownloadOutlined } from '@ant-design/icons';
+import * as XLSX from 'xlsx';
 
 const { Option } = Select;
 const { Search } = Input;
@@ -23,7 +24,6 @@ const CandidatesManagement = () => {
     fetchCandidates();
     fetchSteps();
     fetchCandidateSteps();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -31,12 +31,10 @@ const CandidatesManagement = () => {
     if (step) {
       setSelectedStep(parseInt(step));
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams?.get("step")]);
 
   useEffect(() => {
     fetchVotes();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedStep]);
 
   const fetchCandidates = async () => {
@@ -277,7 +275,6 @@ const CandidatesManagement = () => {
         );
       },
     },
-  
   ];
 
   const getTotalCandidatesForStep = (stepId) => {
@@ -298,6 +295,29 @@ const CandidatesManagement = () => {
     return candidates.filter(candidate => 
       getCandidateStatus(candidate.id, previousStep.id) === 'validée'
     ).length;
+  };
+
+  const exportToExcel = () => {
+    const dataToExport = candidates.map(candidate => {
+      const { totalVotes, validVotes } = getVotesForCandidate(candidate.id);
+      const candidateStepStatuses = steps.reduce((acc, step) => {
+        acc[`Étape ${step.nom}`] = getCandidateStatus(candidate.id, step.id);
+        return acc;
+      }, {});
+
+      return {
+        ...candidate,
+        'Date d\'inscription': new Date(candidate.created_at).toLocaleString('fr-FR'),
+        'Total Votes': totalVotes,
+        'Votes Valides': validVotes,
+        ...candidateStepStatuses
+      };
+    });
+
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Candidats");
+    XLSX.writeFile(wb, "candidats_export.xlsx");
   };
 
   return (
@@ -323,7 +343,7 @@ const CandidatesManagement = () => {
       </Row>
 
       <Row gutter={[16, 16]} align="middle" style={{ marginBottom: '20px' }}>
-        <Col xs={24} sm={12} style={{ marginBottom: '10px' }}>
+        <Col xs={24} sm={8} style={{ marginBottom: '10px' }}>
           <Text strong>Étape Sélectionnée : </Text>
           <Select
             style={{ width: '100%', maxWidth: 200, marginLeft: '10px' }}
@@ -339,12 +359,21 @@ const CandidatesManagement = () => {
             ))}
           </Select>
         </Col>
-        <Col xs={24} sm={12} style={{ textAlign: 'right' }}>
+        <Col xs={24} sm={8} style={{ textAlign: 'center' }}>
           <Search
             placeholder="Rechercher un candidat"
             onSearch={value => setSearchTerm(value)}
             style={{ width: '100%', maxWidth: 300 }}
           />
+        </Col>
+        <Col xs={24} sm={8} style={{ textAlign: 'right' }}>
+          <Button
+            type="primary"
+            icon={<DownloadOutlined />}
+            onClick={exportToExcel}
+          >
+            Exporter en Excel
+          </Button>
         </Col>
       </Row>
 
