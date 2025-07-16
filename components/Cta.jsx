@@ -25,7 +25,7 @@ const Cta = () => {
             Exploitez votre talent, partagez vos idées et faites entendre votre voix.
           </h2>
           <p className="mb-6 font-light text-gray-700 md:text-lg dark:text-gray-400">
-            Le concours d&apos;éloquence &quot;VOUS AVEZ LA PAROLE&quot; est l&apos;opportunité parfaite pour vous démarquer, inspirer les autres et développer vos talents oratoires. Relevez le défi et faites partie des jeunes qui changent le Cameroun en participant à cette compétition passionnante.
+            Le concours d&apos;éloquence &quot;WHO CAN SPEAK&quot; est l&apos;opportunité parfaite pour vous démarquer, inspirer les autres et développer vos talents oratoires. Relevez le défi et faites partie des jeunes qui changent le Cameroun en participant à cette compétition passionnante.
           </p>
           <Link
             href="/signup"
