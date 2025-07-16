@@ -5,7 +5,7 @@ export const FeaturesSection = () => {
   return (
     <section className="bg-white text-gray-900 py-16 px-8">
       <div className="max-w-7xl mx-auto text-center">
-        <h2 className="text-4xl font-bold mb-4">Vous avez la parole !!!</h2>
+        <h2 className="text-4xl font-bold mb-4">Who Can Speak !!!</h2>
         <p className="text-lg mb-12">
           {`Rejoignez le mouvement dès aujourd'hui ! Inscrivez-vous maintenant pour prouver que vous avez la parole, inspirez les autres et gagnez des récompenses prestigieuses`}
         </p>

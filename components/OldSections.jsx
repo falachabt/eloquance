@@ -21,7 +21,7 @@ export const OldSessions = () => (
       <div>
         <h2 className="text-4xl font-bold mb-4">Retour sur les éditions précédentes</h2>
         <p className="text-lg mb-6">
-          {`Plongez dans l'atmosphère inoubliable des éditions précédentes de "VOUS AVEZ LA PAROLE". 
+          {`Plongez dans l'atmosphère inoubliable des éditions précédentes de "WHO CAN SPEAK". 
           Revivez les moments forts et les discours marquants qui ont inspiré des centaines de jeunes orateurs. 
           Inscrivez-vous dès aujourd'hui et faites partie des talents qui marqueront cette nouvelle édition !`}
         </p>

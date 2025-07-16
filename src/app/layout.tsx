@@ -14,8 +14,8 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: 'Vous avez la parole ',
-  description: '#vousavezlaparole 2024',  
+  title: 'Who Can Speak',
+  description: '#whocanspeak 2024',  
 };
 
 

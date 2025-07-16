@@ -10,7 +10,7 @@ const page = () => {
 export default page
 
 export const metadata = {
-    title: 'Connexion - Concours d’Éloquence VOUS AVEZ LA PAROLE',
+    title: 'Connexion - Concours d’Éloquence WHO CAN SPEAK',
     description: 'Connectez-vous à votre compte pour accéder à vos informations de participation au concours d’éloquence.',
    
   };

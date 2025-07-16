@@ -24,7 +24,7 @@ export default function ReservationPage() {
 
 
 export const metadata = {
-  title: 'Réserver - Assistez au Concours VOUS AVEZ LA PAROLE',
-  description: 'Réservez votre place pour assister à la deuxième édition du concours d’éloquence VOUS AVEZ LA PAROLE, qui aura lieu au CENAJES de Dschang.',
+  title: 'Réserver - Assistez au Concours WHO CAN SPEAK',
+  description: 'Réservez votre place pour assister à la deuxième édition du concours d’éloquence WHO CAN SPEAK, qui aura lieu au CENAJES de Dschang.',
   
 };
